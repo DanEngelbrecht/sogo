@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "iosfwd": "cpp",
+        "xlocale": "cpp",
+        "xstring": "cpp",
+        "memory": "cpp",
+        "system_error": "cpp",
+        "vector": "cpp",
+        "xstddef": "cpp",
+        "new": "cpp"
+    }
+}
