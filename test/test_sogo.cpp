@@ -57,12 +57,12 @@ static void sogo_simple_graph(SCtx* )
     static const uint32_t NODE_COUNT = 6;
     const sogo::NodeDescription* NODES[NODE_COUNT] =
     {
-        &sogo::SineNodeDescription,
-        &sogo::GainNodeDescription,
-        &sogo::ToStereoNodeDescription,
-        &sogo::SplitNodeDescription,
-        &sogo::GainNodeDescription,
-        &sogo::MergeNodeDescription
+        &sogo::DCNodeDescription,           // 0.5
+        &sogo::GainNodeDescription,         // 0.5 * 0.5
+        &sogo::ToStereoNodeDescription,     // 0.5 * 0.5
+        &sogo::SplitNodeDescription,        // 0.5 * 0.5
+        &sogo::GainNodeDescription,         // 0.5 * 0.5 * 2.0
+        &sogo::MergeNodeDescription         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
     };
 
     static const uint16_t CONNECTION_COUNT = 6;
@@ -97,15 +97,33 @@ static void sogo_simple_graph(SCtx* )
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
 
+    sogo::TParameterNameHash level_parameter_hash = sogo::MakeParameterHash(0, "Level");
+    ASSERT_TRUE(sogo::SetParameter(graph, level_parameter_hash, 0.5f));
+
     sogo::TParameterNameHash gain_parameter_hash = sogo::MakeParameterHash(1, "Gain");
-    sogo::SetParameter(graph, gain_parameter_hash, 0.5f);
+    ASSERT_TRUE(sogo::SetParameter(graph, gain_parameter_hash, 0.5f));
+
+    sogo::TParameterNameHash gain2_parameter_hash = sogo::MakeParameterHash(4, "Gain");
+    ASSERT_TRUE(sogo::SetParameter(graph, gain2_parameter_hash, 2.f));
 
     for (uint32_t i = 0; i < 6; ++i)
     {
         ASSERT_TRUE(sogo::RenderGraph(graph, MAX_BATCH_SIZE));
         sogo::RenderOutput* render_output = sogo::GetOutput(graph, 5, 0);
+
         ASSERT_TRUE(render_output != 0x0);
         ASSERT_EQ(2, render_output->m_ChannelCount);
+
+        if (i > 0)
+        {
+            // Skip first batch since it has filtering on gain
+            static const float expected_signal = ((0.5f * 0.5f) * 2.f) + (0.5f * 0.5f);
+            for (sogo::TFrameCount f = 0; f < MAX_BATCH_SIZE * 2; ++f)
+            {
+                ASSERT_EQ(expected_signal, render_output->m_Buffer[f]);
+            }
+        }
+
         ASSERT_TRUE(render_output->m_Buffer != 0x0);
     }
     sogo::DisposeGraph(graph);
