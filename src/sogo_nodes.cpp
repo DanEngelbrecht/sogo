@@ -1,10 +1,12 @@
 #include "sogo_nodes.h"
-#include <memory.h>
 #include <math.h>
 
 namespace sogo {
 
 ///////////////////// SOGO SPLIT
+
+static const TInputIndex SPLIT_INPUT_COUNT = 1;
+static const TOutputIndex SPLIT_OUTPUT_COUNT = 2;
 
 static bool RenderSplit(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
@@ -20,14 +22,22 @@ static bool RenderSplit(HGraph graph, HNode node, const RenderParameters* render
     {
         return false;
     }
-    memcpy(render_parameters->m_RenderOutputs[1].m_Buffer, input_data->m_Buffer, sizeof(float) * input_data->m_ChannelCount * render_parameters->m_FrameCount);
+
+    const float* output1 = input_data->m_Buffer;
+    float* output2 = render_parameters->m_RenderOutputs[1].m_Buffer;
+    TFrameCount sample_count = render_parameters->m_FrameCount * input_data->m_ChannelCount;
+    while (sample_count--)
+    {
+        *output2++ = *output1++;
+    }
+
     render_parameters->m_RenderOutputs[0].m_Buffer = input_data->m_Buffer;
     input_data->m_Buffer = 0x0;
 
     return true;
 }
 
-struct OutputDescription SplitNodeOutputDescriptions[2] =
+struct OutputDescription SplitNodeOutputDescriptions[SPLIT_OUTPUT_COUNT] =
 {
     {OutputDescription::PASS_THROUGH, {0}},
     {OutputDescription::AS_INPUT, {0}}
@@ -39,7 +49,7 @@ const NodeDescription SplitNodeDescription =
     0x0,
     SplitNodeOutputDescriptions,
     1,
-    2,
+    SPLIT_OUTPUT_COUNT,
     0,
     0
 };
@@ -129,13 +139,13 @@ static bool GainFlat(float* io_buffer, TChannelCount channel_count, TFrameCount 
     switch (channel_count)
     {
         case 1:
-            while (frame_count-- > 0)
+            while (frame_count--)
             {
                 *io_buffer++ *= gain;
             }
             return true;
         case 2:
-            while (frame_count-- > 0)
+            while (frame_count--)
             {
                 *io_buffer++ *= gain;
                 *io_buffer++ *= gain;
@@ -151,14 +161,14 @@ static bool GainRamp(float* io_buffer, TChannelCount channel_count, TFrameCount 
     switch (channel_count)
     {
         case 1:
-            while (frame_count-- > 0)
+            while (frame_count--)
             {
                 *io_buffer++ *= gain;
                 gain += gain_step;
             }
             return true;
         case 2:
-            while (frame_count-- > 0)
+            while (frame_count--)
             {
                 *io_buffer++ *= gain;
                 *io_buffer++ *= gain;
@@ -267,7 +277,7 @@ static bool RenderSine(HGraph graph, HNode node, const RenderParameters* render_
     TFrameCount frame_count = render_parameters->m_FrameCount;
     render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, 1, frame_count);
     float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
-    while (frame_count-- > 0)
+    while (frame_count--)
     {
         float frame = sinf(value);
         *io_buffer++ = frame;
@@ -382,7 +392,7 @@ static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_pa
     uint32_t frame_count = render_parameters->m_FrameCount;
     render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, 1, frame_count);
     float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
-    while (frame_count-- > 0)
+    while (frame_count--)
     {
         *io_buffer++ = level;
     }
