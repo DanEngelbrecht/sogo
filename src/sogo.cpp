@@ -3,7 +3,6 @@
 #include "../third-party/containers/src/jc/hashtable.h"
 #include "../third-party/xxHash-1/xxhash.h"
 
-#include <stdlib.h>
 #include <new>
 
 #define ALIGN_SIZE(x, align)    (((x) + ((align) - 1)) & ~((align) - 1))
@@ -42,29 +41,8 @@ struct Graph {
         Node* node_data,
         float* scratch_buffer_data,
         RenderOutput* render_output_data,
-        RenderInput* render_input_data)
-        : m_ParameterLookup(parameter_count, parameter_lookup_data)
-        , m_Parameters(parameters_data)
-        , m_Resources(resources_data)
-        , m_NodeCount(node_count)
-        , m_Nodes(node_data)
-        , m_ScratchBufferSize(sample_buffer_size)
-        , m_ScratchBuffer(scratch_buffer_data)
-        , m_ScratchUsedCount(0)
-        , m_FrameRate(frame_rate)
-        , m_RenderOutputs(render_output_data)
-        , m_RenderInputs(render_input_data)
-    {
-        for (TInputIndex i = 0; i < input_count; ++i)
-        {
-            m_RenderInputs[i].m_RenderOutput = 0x0;
-        }
-        for (TOutputIndex i = 0; i < output_count; ++i)
-        {
-            m_RenderOutputs[0].m_Buffer = 0x0;
-            m_RenderOutputs[0].m_ChannelCount = 0;
-        }
-    }
+        RenderInput* render_input_data);
+
     jc::HashTable<TParameterNameHash, TParameterIndex> m_ParameterLookup;
     float* m_Parameters;
     Resource** m_Resources;
@@ -78,6 +56,113 @@ struct Graph {
     RenderInput* m_RenderInputs;
 };
 
+Graph::Graph(TFrameRate frame_rate,
+    TNodeIndex node_count,
+    TParameterIndex parameter_count,
+    uint32_t sample_buffer_size,
+    TInputIndex input_count,
+    TOutputIndex output_count,
+    void* parameter_lookup_data,
+    float* parameters_data,
+    Resource** resources_data,
+    Node* node_data,
+    float* scratch_buffer_data,
+    RenderOutput* render_output_data,
+    RenderInput* render_input_data)
+    : m_ParameterLookup(parameter_count, parameter_lookup_data)
+    , m_Parameters(parameters_data)
+    , m_Resources(resources_data)
+    , m_NodeCount(node_count)
+    , m_Nodes(node_data)
+    , m_ScratchBufferSize(sample_buffer_size)
+    , m_ScratchBuffer(scratch_buffer_data)
+    , m_ScratchUsedCount(0)
+    , m_FrameRate(frame_rate)
+    , m_RenderOutputs(render_output_data)
+    , m_RenderInputs(render_input_data)
+{
+    for (TInputIndex i = 0; i < input_count; ++i)
+    {
+        m_RenderInputs[i].m_RenderOutput = 0x0;
+    }
+    for (TOutputIndex i = 0; i < output_count; ++i)
+    {
+        m_RenderOutputs[0].m_Buffer = 0x0;
+        m_RenderOutputs[0].m_ChannelCount = 0;
+    }
+}
+
+static TChannelCount GetOutputChannelCount(
+    const GraphDescription* graph_description,
+    TNodeIndex node_index,
+    TOutputIndex output_index)
+{
+    const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
+    const OutputDescription* output_description = &node_description->m_OutputDescriptions[output_index];
+    switch (output_description->m_Mode)
+    {
+        case OutputDescription::FIXED:
+            return output_description->m_ChannelCount;
+        case OutputDescription::PASS_THROUGH:
+        case OutputDescription::AS_INPUT:
+        {
+            for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
+            {
+                const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
+                if (node_connection->m_InputNodeIndex == node_index &&
+                    node_connection->m_InputIndex == output_description->m_InputIndex)
+                {
+                    if (node_connection->m_OutputNodeIndex == EXTERNAL_NODE_INDEX)
+                    {
+                        return graph_description->m_ExternalInputs[node_connection->m_OutputIndex]->m_ChannelCount;
+                    }
+                    return GetOutputChannelCount(
+                        graph_description,
+                        node_connection->m_OutputNodeIndex,
+                        node_connection->m_OutputIndex);
+                }
+            }
+            return 0;
+        }
+        default:
+            return 0;
+    }
+}
+
+static TChannelCount GetOutputChannelAllocationCount(
+    const GraphDescription* graph_description,
+    TNodeIndex node_index,
+    TOutputIndex output_index)
+{
+    const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
+    const OutputDescription* output_description = &node_description->m_OutputDescriptions[output_index];
+    switch (output_description->m_Mode)
+    {
+        case OutputDescription::PASS_THROUGH:
+            return 0;
+        case OutputDescription::FIXED:
+            return output_description->m_ChannelCount;
+        case OutputDescription::AS_INPUT:
+        {
+            for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
+            {
+                const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
+                if (node_connection->m_InputNodeIndex == node_index &&
+                    node_connection->m_InputIndex == output_description->m_InputIndex)
+                {
+                    return GetOutputChannelCount(
+                        graph_description,
+                        node_connection->m_OutputNodeIndex,
+                        node_connection->m_OutputIndex);
+                }
+            }
+            return 0;
+        }
+        default:
+            return 0;
+    }
+}
+
 struct GraphProperties {
     TParameterIndex m_ParameterCount;
     TResourceIndex m_ResourceCount;
@@ -85,6 +170,39 @@ struct GraphProperties {
     TOutputIndex m_OutputCount;
     uint32_t m_SampleBufferSize;
 };
+
+static void GetGraphProperties(
+    uint32_t max_batch_size,
+    const GraphDescription* graph_description,
+    GraphProperties* graph_properties)
+{
+    TParameterIndex parameter_count = 0;
+    TResourceIndex resource_count = 0;
+    TInputIndex input_count = 0;
+    TOutputIndex output_count = 0;
+    uint32_t generated_buffer_count = 0;
+
+    for (TNodeIndex i = 0; i < graph_description->m_NodeCount; ++i)
+    {
+        const NodeDescription* node_description = graph_description->m_NodeDescriptions[i];
+        parameter_count += node_description->m_ParameterCount;
+        resource_count += node_description->m_ResourceCount;
+        input_count += node_description->m_InputCount;
+        output_count += node_description->m_OutputCount;
+        for (TOutputIndex j = 0; j < node_description->m_OutputCount; ++j)
+        {
+            generated_buffer_count += GetOutputChannelAllocationCount(graph_description, i, j);
+        }
+    }
+
+    uint32_t sample_buffer_size = generated_buffer_count * max_batch_size;
+
+    graph_properties->m_ParameterCount = parameter_count;
+    graph_properties->m_ResourceCount = resource_count;
+    graph_properties->m_InputCount = input_count;
+    graph_properties->m_OutputCount = output_count;
+    graph_properties->m_SampleBufferSize = sample_buffer_size;
+}
 
 static size_t GetGraphSize(
     const GraphDescription* graph_description,
@@ -101,10 +219,20 @@ static size_t GetGraphSize(
     return s;
 }
 
+size_t GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description)
+{
+    GraphProperties graph_properties;
+    GetGraphProperties(max_batch_size, graph_description, &graph_properties);
+    size_t graph_size = GetGraphSize(graph_description, &graph_properties);
+    return graph_size;
+}
+
 void DisposeGraph(HGraph graph)
 {
-    graph->~Graph();
-    free(graph);
+    if (graph != 0x0)
+    {
+        graph->~Graph();
+    }
 }
 
 float* AllocateBuffer(HGraph graph, HNode , TChannelCount channel_count, TFrameCount frame_count)
@@ -255,123 +383,13 @@ bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_in
     return true;
 }
 
-
-static TChannelCount GetOutputChannelCount(
-    const GraphDescription* graph_description,
-    TNodeIndex node_index,
-    TOutputIndex output_index)
-{
-    const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
-    const OutputDescription* output_description = &node_description->m_OutputDescriptions[output_index];
-    switch (output_description->m_Mode)
-    {
-        case OutputDescription::FIXED:
-            return output_description->m_ChannelCount;
-        case OutputDescription::PASS_THROUGH:
-        case OutputDescription::AS_INPUT:
-        {
-            for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
-            {
-                const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
-                if (node_connection->m_InputNodeIndex == node_index &&
-                    node_connection->m_InputIndex == output_description->m_InputIndex)
-                {
-                    if (node_connection->m_OutputNodeIndex == EXTERNAL_NODE_INDEX)
-                    {
-                        return graph_description->m_ExternalInputs[node_connection->m_OutputIndex]->m_ChannelCount;
-                    }
-                    return GetOutputChannelCount(
-                        graph_description,
-                        node_connection->m_OutputNodeIndex,
-                        node_connection->m_OutputIndex);
-                }
-            }
-            return 0;
-        }
-        default:
-            return 0;
-    }
-}
-
-static TChannelCount GetOutputChannelAllocationCount(
-    const GraphDescription* graph_description,
-    TNodeIndex node_index,
-    TOutputIndex output_index)
-{
-    const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
-    const OutputDescription* output_description = &node_description->m_OutputDescriptions[output_index];
-    switch (output_description->m_Mode)
-    {
-        case OutputDescription::PASS_THROUGH:
-            return 0;
-        case OutputDescription::FIXED:
-            return output_description->m_ChannelCount;
-        case OutputDescription::AS_INPUT:
-        {
-            for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
-            {
-                const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
-                if (node_connection->m_InputNodeIndex == node_index &&
-                    node_connection->m_InputIndex == output_description->m_InputIndex)
-                {
-                    return GetOutputChannelCount(
-                        graph_description,
-                        node_connection->m_OutputNodeIndex,
-                        node_connection->m_OutputIndex);
-                }
-            }
-            return 0;
-        }
-        default:
-            return 0;
-    }
-}
-
-static void GetGraphProperties(
-    uint32_t max_batch_size,
-    const GraphDescription* graph_description,
-    GraphProperties* graph_properties)
-{
-    TParameterIndex parameter_count = 0;
-    TResourceIndex resource_count = 0;
-    TInputIndex input_count = 0;
-    TOutputIndex output_count = 0;
-    uint32_t generated_buffer_count = 0;
-
-    for (TNodeIndex i = 0; i < graph_description->m_NodeCount; ++i)
-    {
-        const NodeDescription* node_description = graph_description->m_NodeDescriptions[i];
-        parameter_count += node_description->m_ParameterCount;
-        resource_count += node_description->m_ResourceCount;
-        input_count += node_description->m_InputCount;
-        output_count += node_description->m_OutputCount;
-        for (TOutputIndex j = 0; j < node_description->m_OutputCount; ++j)
-        {
-            generated_buffer_count += GetOutputChannelAllocationCount(graph_description, i, j);
-        }
-    }
-
-    uint32_t sample_buffer_size = generated_buffer_count * max_batch_size;
-
-    graph_properties->m_ParameterCount = parameter_count;
-    graph_properties->m_ResourceCount = resource_count;
-    graph_properties->m_InputCount = input_count;
-    graph_properties->m_OutputCount = output_count;
-    graph_properties->m_SampleBufferSize = sample_buffer_size;
-}
-
-HGraph CreateGraph(TFrameRate frame_rate,
+HGraph CreateGraph(void* mem,
+    TFrameRate frame_rate,
     TFrameCount max_batch_size,
     const GraphDescription* graph_description)
 {
     GraphProperties graph_properties;
     GetGraphProperties(max_batch_size, graph_description, &graph_properties);
-    size_t graph_size = GetGraphSize(graph_description, &graph_properties);
-    void* mem = malloc(graph_size);
-    if (mem == 0x0)
-    {
-        return 0x0;
-    }
 
     uint8_t* ptr = (uint8_t*)mem;
     size_t offset = ALIGN_SIZE(sizeof(Graph), 4);

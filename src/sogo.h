@@ -98,7 +98,8 @@ namespace sogo
         RenderOutput**          m_ExternalInputs;
     };
 
-    HGraph CreateGraph(TFrameRate frame_rate, TFrameCount max_batch_size, const GraphDescription* graph_description);
+    size_t GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description);
+    HGraph CreateGraph(void* mem, TFrameRate frame_rate, TFrameCount max_batch_size, const GraphDescription* graph_description);
     float* AllocateBuffer(HGraph graph, HNode node, TChannelCount channel_count, TFrameCount frame_count);
     void DisposeGraph(HGraph graph);
 
