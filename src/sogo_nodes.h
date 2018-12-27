@@ -8,4 +8,5 @@ namespace sogo {
     extern const NodeDescription GainNodeDescription;
     extern const NodeDescription SineNodeDescription;
     extern const NodeDescription ToStereoNodeDescription;
+    extern const NodeDescription DCNodeDescription;
 }

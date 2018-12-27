@@ -233,7 +233,7 @@ const NodeDescription GainNodeDescription =
     1,
     1,
     0,
-    2
+    SOGO_GAIN_PARAMETER_COUNT
 };
 
 
@@ -295,7 +295,7 @@ const NodeDescription SineNodeDescription =
     0,
     1,
     0,
-    3
+    SOGO_SINE_PARAMETER_COUNT
 };
 
 
@@ -344,7 +344,10 @@ static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     return true;
 }
 
-struct OutputDescription ToStereoNodeOutputDescriptions[1] =
+static const TInputIndex TOSTEREO_INPUT_COUNT = 1;
+static const TOutputIndex TOSTEREO_NODE_OUTPUT_COUNT = 1;
+
+struct OutputDescription ToStereoNodeOutputDescriptions[TOSTEREO_NODE_OUTPUT_COUNT] =
 {
     {OutputDescription::FIXED, {2}}
 };
@@ -354,10 +357,57 @@ const NodeDescription ToStereoNodeDescription =
     RenderToStereo,
     0x0,
     ToStereoNodeOutputDescriptions,
-    1,
-    1,
+    TOSTEREO_INPUT_COUNT,
+    TOSTEREO_NODE_OUTPUT_COUNT,
     0,
     0
 };
+
+///////////////////// SOGO DC
+
+enum SOGO_DC_PARAMETERS
+{
+    SOGO_DC_PARAMETER_LEVEL_INDEX,
+    SOGO_DC_PARAMETER_COUNT
+};
+
+static const ParameterDescription DCParameters[SOGO_DC_PARAMETER_COUNT] = {
+    {"Level", 1.0f}
+};
+
+static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_parameters)
+{
+    float level = render_parameters->m_Parameters[SOGO_DC_PARAMETER_LEVEL_INDEX];
+
+    uint32_t frame_count = render_parameters->m_FrameCount;
+    render_parameters->m_RenderOutputs[0].m_Buffer = AllocateBuffer(graph, node, 1, frame_count);
+    float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
+    while (frame_count-- > 0)
+    {
+        *io_buffer++ = level;
+    }
+    return true;
+}
+
+static const TOutputIndex DCNODE_OUTPUT_COUNT = 1;
+
+struct OutputDescription DCNodeOutputDescriptions[DCNODE_OUTPUT_COUNT] =
+{
+    {OutputDescription::FIXED, {1}}
+};
+
+const NodeDescription DCNodeDescription =
+{
+    RenderDC,
+    DCParameters,
+    DCNodeOutputDescriptions,
+    0,
+    DCNODE_OUTPUT_COUNT,
+    0,
+    SOGO_DC_PARAMETER_COUNT
+};
+
+
+
 
 }
