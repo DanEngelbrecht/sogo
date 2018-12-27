@@ -1,0 +1,6 @@
+[submodule "third-party/xxhash-1"]
+	path = third-party/xxhash-1
+	url = https://github.com/Cyan4973/xxHash.git
+[submodule "third-party/containers"]
+	path = third-party/containers
+	url = https://github.com/JCash/containers.git
