@@ -84,11 +84,11 @@ static bool RenderMerge(HGraph , HNode , const RenderParameters* render_paramete
         return true;
     }
 
-    if (!RenderMerge(render_parameters->m_FrameCount, render_parameters->m_RenderInputs[1].m_RenderOutput, render_parameters->m_RenderInputs[1].m_RenderOutput))
+    if (!RenderMerge(render_parameters->m_FrameCount, render_parameters->m_RenderInputs[0].m_RenderOutput, render_parameters->m_RenderInputs[1].m_RenderOutput))
     {
         return false;
     }
-    render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_RenderInputs[1].m_RenderOutput->m_Buffer;
+    render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_RenderInputs[0].m_RenderOutput->m_Buffer;
     render_parameters->m_RenderInputs[1].m_RenderOutput->m_Buffer = 0x0;
     return true;
 }
@@ -146,7 +146,7 @@ static bool GainFlat(float* io_buffer, TChannelCount channel_count, TFrameCount 
     }
 }
 
-static bool GainRamp(float* io_buffer, TChannelCount channel_count, TFrameCount frame_count, float gain, float gain_step)
+static bool GainRamp(float* io_buffer, TChannelCount channel_count, TFrameCount frame_count, float& gain, float gain_step)
 {
     switch (channel_count)
     {
