@@ -15,7 +15,7 @@ static bool RenderSplit(HGraph graph, HNode node, const RenderParameters* render
         render_parameters->m_RenderOutputs[1].m_Buffer = 0x0;
         return true;
     }
-    render_parameters->m_RenderOutputs[1].m_Buffer = AllocateBuffer(graph, node, input_data->m_ChannelCount, render_parameters->m_FrameCount);
+    render_parameters->m_RenderOutputs[1].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, input_data->m_ChannelCount, render_parameters->m_FrameCount);
     if (render_parameters->m_RenderOutputs[1].m_Buffer == 0x0)
     {
         return false;
@@ -265,7 +265,7 @@ static bool RenderSine(HGraph graph, HNode node, const RenderParameters* render_
     filtered_frequency = ((frequency * 15) + filtered_frequency) / 16;
     float step = ((2.f * 3.141592654f) * filtered_frequency) / render_parameters->m_FrameRate;
     TFrameCount frame_count = render_parameters->m_FrameCount;
-    render_parameters->m_RenderOutputs[0].m_Buffer = AllocateBuffer(graph, node, 1, frame_count);
+    render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, 1, frame_count);
     float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
     while (frame_count-- > 0)
     {
@@ -326,7 +326,7 @@ static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     float* mono_input = input_data->m_Buffer;
 
     TFrameCount frame_count = render_parameters->m_FrameCount;
-    float* stereo_output = AllocateBuffer(graph, node, 2, frame_count);
+    float* stereo_output = render_parameters->m_AllocateBuffer(graph, node, 2, frame_count);
     if (stereo_output == 0)
     {
         return false;
@@ -380,7 +380,7 @@ static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_pa
     float level = render_parameters->m_Parameters[SOGO_DC_PARAMETER_LEVEL_INDEX];
 
     uint32_t frame_count = render_parameters->m_FrameCount;
-    render_parameters->m_RenderOutputs[0].m_Buffer = AllocateBuffer(graph, node, 1, frame_count);
+    render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, 1, frame_count);
     float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
     while (frame_count-- > 0)
     {

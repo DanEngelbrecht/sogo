@@ -32,18 +32,21 @@ namespace sogo
         uint32_t        m_Size;
     };
 
-    struct RenderParameters
-    {
-        TFrameRate      m_FrameRate;
-        TFrameCount     m_FrameCount;
-        RenderInput*    m_RenderInputs;
-        RenderOutput*   m_RenderOutputs;
-        float*          m_Parameters;
-        Resource**      m_Resources;
-    };
-
     typedef struct Graph* HGraph;
     typedef struct Node* HNode;
+
+    typedef float* (*AllocateBufferFunc)(HGraph graph, HNode node, TChannelCount channel_count, TFrameCount frame_count);
+
+    struct RenderParameters
+    {
+        AllocateBufferFunc  m_AllocateBuffer;
+        TFrameRate          m_FrameRate;
+        TFrameCount         m_FrameCount;
+        RenderInput*        m_RenderInputs;
+        RenderOutput*       m_RenderOutputs;
+        float*              m_Parameters;
+        Resource**          m_Resources;
+    };
 
     typedef bool (*RenderCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
 
@@ -100,7 +103,6 @@ namespace sogo
 
     size_t GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description);
     HGraph CreateGraph(void* mem, TFrameRate frame_rate, TFrameCount max_batch_size, const GraphDescription* graph_description);
-    float* AllocateBuffer(HGraph graph, HNode node, TChannelCount channel_count, TFrameCount frame_count);
     void DisposeGraph(HGraph graph);
 
     TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name);
