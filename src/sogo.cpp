@@ -235,19 +235,6 @@ void DisposeGraph(HGraph graph)
     }
 }
 
-float* AllocateBuffer(HGraph graph, HNode , TChannelCount channel_count, TFrameCount frame_count)
-{
-    uint32_t samples_required = (uint32_t)channel_count * (uint32_t)frame_count;
-    uint32_t samples_left = graph->m_ScratchBufferSize - graph->m_ScratchUsedCount;
-    if (samples_left >= samples_required)
-    {
-        float* scratch = &graph->m_ScratchBuffer[graph->m_ScratchUsedCount];
-        graph->m_ScratchUsedCount += samples_required;
-        return scratch;
-    }
-    return 0x0;
-}
-
 TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name)
 {
     XXH32_hash_t index_hash = XXH32(&node_index, sizeof(TNodeIndex), 0);
@@ -280,6 +267,19 @@ static bool ConnectExternal(HGraph graph, TNodeIndex input_node_index, TInputInd
     return true;
 }
 
+static float* AllocateBuffer(HGraph graph, HNode , TChannelCount channel_count, TFrameCount frame_count)
+{
+    uint32_t samples_required = (uint32_t)channel_count * (uint32_t)frame_count;
+    uint32_t samples_left = graph->m_ScratchBufferSize - graph->m_ScratchUsedCount;
+    if (samples_left >= samples_required)
+    {
+        float* scratch = &graph->m_ScratchBuffer[graph->m_ScratchUsedCount];
+        graph->m_ScratchUsedCount += samples_required;
+        return scratch;
+    }
+    return 0x0;
+}
+
 bool RenderGraph(HGraph graph, TFrameCount frame_count)
 {
     graph->m_ScratchUsedCount = 0;
@@ -287,6 +287,7 @@ bool RenderGraph(HGraph graph, TFrameCount frame_count)
     TNodeIndex node_count = graph->m_NodeCount;
 
     RenderParameters render_parameters;
+    render_parameters.m_AllocateBuffer = AllocateBuffer;
     render_parameters.m_FrameRate = graph->m_FrameRate;
     render_parameters.m_FrameCount = frame_count;
 
