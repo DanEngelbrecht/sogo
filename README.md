@@ -25,7 +25,7 @@ Third party libraries are added as git submodules in the third-party folder
 
 ## Building
 
-Building is just the tests right now, not actuall application.
+Building is just the tests right now, no actual application.
 
 ### Windows
 
