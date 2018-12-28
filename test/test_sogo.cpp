@@ -36,7 +36,8 @@ static void sogo_create(SCtx* )
     };
 
     static const uint32_t MAX_BATCH_SIZE = 128;
-    size_t graph_size = sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION);
+    size_t graph_size = 0;
+    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size));
     void* graph_mem = malloc(graph_size);
     ASSERT_NE(0x0, graph_mem);
 
@@ -45,10 +46,9 @@ static void sogo_create(SCtx* )
         44100,
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
-
     TEST_ASSERT_NE(0x0, graph);
+
     TEST_ASSERT_TRUE(RenderGraph(graph, 64));
-    sogo::DisposeGraph(graph);
     free(graph_mem);
 }
 
@@ -87,7 +87,8 @@ static void sogo_simple_graph(SCtx* )
 
     static const uint32_t MAX_BATCH_SIZE = 128;
 
-    size_t graph_size = sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION);
+    size_t graph_size = 0;
+    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size));
     void* graph_mem = malloc(graph_size);
     ASSERT_NE(0x0, graph_mem);
 
@@ -96,6 +97,7 @@ static void sogo_simple_graph(SCtx* )
         44100,
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
+    TEST_ASSERT_NE(0x0, graph);
 
     sogo::TParameterNameHash level_parameter_hash = sogo::MakeParameterHash(0, "Level");
     ASSERT_TRUE(sogo::SetParameter(graph, level_parameter_hash, 0.5f));
@@ -126,7 +128,6 @@ static void sogo_simple_graph(SCtx* )
 
         ASSERT_TRUE(render_output->m_Buffer != 0x0);
     }
-    sogo::DisposeGraph(graph);
     free(graph_mem);
 }
 
