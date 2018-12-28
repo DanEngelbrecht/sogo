@@ -10,17 +10,18 @@ namespace sogo
     typedef uint16_t TResourceIndex;
     typedef uint16_t TInputIndex;
     typedef uint16_t TOutputIndex;
-    typedef uint16_t TChannelCount;
+    typedef uint16_t TChannelIndex;
     typedef uint16_t TConnectionIndex;
     typedef uint32_t TParameterNameHash;
     typedef uint32_t TTriggerNameHash;
-    typedef uint32_t TFrameCount;
+    typedef uint32_t TFrameIndex;
+    typedef uint32_t TSampleIndex;
     typedef uint32_t TFrameRate;
 
     struct RenderOutput
     {
         float*          m_Buffer;
-        TChannelCount   m_ChannelCount;
+        TChannelIndex   m_ChannelCount;
     };
 
     struct RenderInput
@@ -37,13 +38,13 @@ namespace sogo
     typedef struct Graph* HGraph;
     typedef struct Node* HNode;
 
-    typedef float* (*AllocateBufferFunc)(HGraph graph, HNode node, TChannelCount channel_count, TFrameCount frame_count);
+    typedef float* (*AllocateBufferFunc)(HGraph graph, HNode node, TChannelIndex channel_count, TFrameIndex frame_count);
 
     struct RenderParameters
     {
         AllocateBufferFunc  m_AllocateBuffer;
         TFrameRate          m_FrameRate;
-        TFrameCount         m_FrameCount;
+        TFrameIndex         m_FrameCount;
         RenderInput*        m_RenderInputs;
         RenderOutput*       m_RenderOutputs;
         float*              m_Parameters;
@@ -74,7 +75,7 @@ namespace sogo
         };
         uint16_t m_Mode;
         union {
-            TChannelCount   m_ChannelCount;    // FIXED
+            TChannelIndex   m_ChannelCount;    // FIXED
             TInputIndex     m_InputIndex;      // AS_INPUT
         };
     };
@@ -111,8 +112,8 @@ namespace sogo
         RenderOutput**          m_ExternalInputs;
     };
 
-    bool GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description, size_t& out_size);
-    HGraph CreateGraph(void* mem, TFrameRate frame_rate, TFrameCount max_batch_size, const GraphDescription* graph_description);
+    bool GetGraphSize(TFrameIndex max_batch_size, const GraphDescription* graph_description, size_t& out_graph_size, TSampleIndex& out_scratch_buffer_sample_count);
+    HGraph CreateGraph(void* graph_mem, float* scratch_buffer, TFrameRate frame_rate, TFrameIndex max_batch_size, const GraphDescription* graph_description);
 
     TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name);
     bool SetParameter(HGraph graph, TParameterNameHash parameter_hash, float value);
@@ -122,6 +123,6 @@ namespace sogo
 
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, Resource* resource);
 
-    bool RenderGraph(HGraph graph, TFrameCount frame_count);
+    bool RenderGraph(HGraph graph, TFrameIndex frame_count);
     RenderOutput* GetOutput(HGraph graph, TNodeIndex node_index, TOutputIndex output_index);
 }

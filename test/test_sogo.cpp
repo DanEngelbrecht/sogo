@@ -37,12 +37,14 @@ static void sogo_create(SCtx* )
 
     static const uint32_t MAX_BATCH_SIZE = 128;
     size_t graph_size = 0;
-    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size));
-    void* graph_mem = malloc(graph_size);
+    sogo::TSampleIndex out_scratch_buffer_sample_count;
+    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size, out_scratch_buffer_sample_count));
+    void* graph_mem = malloc(graph_size + out_scratch_buffer_sample_count * sizeof(float));
     ASSERT_NE(0x0, graph_mem);
 
     sogo::HGraph graph = sogo::CreateGraph(
         graph_mem,
+        (float*)&((uint8_t*)graph_mem)[graph_size],
         44100,
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
@@ -88,12 +90,14 @@ static void sogo_simple_graph(SCtx* )
     static const uint32_t MAX_BATCH_SIZE = 128;
 
     size_t graph_size = 0;
-    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size));
-    void* graph_mem = malloc(graph_size);
+    sogo::TSampleIndex out_scratch_buffer_sample_count;
+    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size, out_scratch_buffer_sample_count));
+    void* graph_mem = malloc(graph_size + out_scratch_buffer_sample_count * sizeof(float));
     ASSERT_NE(0x0, graph_mem);
 
     sogo::HGraph graph = sogo::CreateGraph(
         graph_mem,
+        (float*)&((uint8_t*)graph_mem)[graph_size],
         44100,
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
@@ -120,7 +124,7 @@ static void sogo_simple_graph(SCtx* )
         {
             // Skip first batch since it has filtering on gain
             static const float expected_signal = ((0.5f * 0.5f) * 2.f) + (0.5f * 0.5f);
-            for (sogo::TFrameCount f = 0; f < MAX_BATCH_SIZE * 2; ++f)
+            for (sogo::TFrameIndex f = 0; f < MAX_BATCH_SIZE * 2; ++f)
             {
                 ASSERT_EQ(expected_signal, render_output->m_Buffer[f]);
             }
@@ -307,4 +311,3 @@ TEST_BEGIN(sogo_test, sogo_main_setup, sogo_main_teardown, test_setup, test_tear
     TEST(sogo_simple_graph)
     TEST(sogo_merge_graphs)
 TEST_END(sogo_test)
-

@@ -28,7 +28,7 @@ static bool RenderSplit(HGraph graph, HNode node, const RenderParameters* render
 
     const float* output1 = input_data->m_Buffer;
     float* output2 = render_parameters->m_RenderOutputs[1].m_Buffer;
-    TFrameCount sample_count = render_parameters->m_FrameCount * input_data->m_ChannelCount;
+    TSampleIndex sample_count = render_parameters->m_FrameCount * input_data->m_ChannelCount;
     while (sample_count--)
     {
         *output2++ = *output1++;
@@ -90,7 +90,7 @@ enum SOGO_MERGE_OUTPUTS
     SOGO_MERGE_OUTPUT_COUNT
 };
 
-static bool RenderMerge(TFrameCount frame_count, RenderOutput* input_data_1, RenderOutput* input_data_2)
+static bool RenderMerge(TFrameIndex frame_count, RenderOutput* input_data_1, RenderOutput* input_data_2)
 {
     if (input_data_1->m_ChannelCount != input_data_2->m_ChannelCount)
     {
@@ -186,7 +186,7 @@ enum SOGO_GAIN_OUTPUTS
     SOGO_GAIN_OUTPUT_COUNT
 };
 
-static bool GainFlat(float* io_buffer, TChannelCount channel_count, TFrameCount frame_count, float gain)
+static bool GainFlat(float* io_buffer, TChannelIndex channel_count, TFrameIndex frame_count, float gain)
 {
     switch (channel_count)
     {
@@ -208,7 +208,7 @@ static bool GainFlat(float* io_buffer, TChannelCount channel_count, TFrameCount 
     }
 }
 
-static bool GainRamp(float* io_buffer, TChannelCount channel_count, TFrameCount frame_count, float& gain, float gain_step)
+static bool GainRamp(float* io_buffer, TChannelIndex channel_count, TFrameIndex frame_count, float& gain, float gain_step)
 {
     switch (channel_count)
     {
@@ -232,7 +232,7 @@ static bool GainRamp(float* io_buffer, TChannelCount channel_count, TFrameCount 
     }
 }
 
-static bool RenderGain(TFrameCount frame_count, RenderOutput* output_data, float gain, float& filtered_gain)
+static bool RenderGain(TFrameIndex frame_count, RenderOutput* output_data, float gain, float& filtered_gain)
 {
     static const float max_gain_step_per_frame = 1.0f / 32;
 
@@ -246,8 +246,8 @@ static bool RenderGain(TFrameCount frame_count, RenderOutput* output_data, float
         return GainFlat(output_data->m_Buffer, output_data->m_ChannelCount, frame_count, gain);
     }
 
-    TFrameCount step_count = (TFrameCount)(floor(fabs(gain - filtered_gain) / max_gain_step_per_frame));
-    TFrameCount ramp_frames = (step_count < frame_count) ? step_count : frame_count;
+    TFrameIndex step_count = (TFrameIndex)(floor(fabs(gain - filtered_gain) / max_gain_step_per_frame));
+    TFrameIndex ramp_frames = (step_count < frame_count) ? step_count : frame_count;
     float gain_step = gain > filtered_gain ? max_gain_step_per_frame : -max_gain_step_per_frame;
 
     if (!GainRamp(output_data->m_Buffer, output_data->m_ChannelCount, ramp_frames, filtered_gain, gain_step))
@@ -350,7 +350,7 @@ static bool RenderSine(HGraph graph, HNode node, const RenderParameters* render_
 
     filtered_frequency = ((frequency * 15) + filtered_frequency) / 16;
     float step = ((2.f * 3.141592654f) * filtered_frequency) / render_parameters->m_FrameRate;
-    TFrameCount frame_count = render_parameters->m_FrameCount;
+    TFrameIndex frame_count = render_parameters->m_FrameCount;
     render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, 1, frame_count);
     float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
     while (frame_count--)
@@ -427,7 +427,7 @@ static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
 
     float* mono_input = input_data->m_Buffer;
 
-    TFrameCount frame_count = render_parameters->m_FrameCount;
+    TFrameIndex frame_count = render_parameters->m_FrameCount;
     float* stereo_output = render_parameters->m_AllocateBuffer(graph, node, 2, frame_count);
     if (stereo_output == 0)
     {
