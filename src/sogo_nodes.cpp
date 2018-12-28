@@ -402,21 +402,46 @@ const NodeDescription SineNodeDescription =
 
 ///////////////////// SOGO MAKE_STEREO
 
-static const TInputIndex TOSTEREO_INPUT_COUNT = 1;
-static const TOutputIndex TOSTEREO_NODE_OUTPUT_COUNT = 1;
+enum SOGO_TOSTEREO_PARAMETERS
+{
+    SOGO_TOSTEREO_PARAMETER_COUNT
+};
+
+enum SOGO_TOSTEREO_RESOURCES
+{
+    SOGO_TOSTEREO_RESOURCE_COUNT
+};
+
+enum SOGO_TOSTEREO_TRIGGERS
+{
+    SOGO_TOSTEREO_TRIGGER_COUNT
+};
+
+enum SOGO_TOSTEREO_INPUTS
+{
+    SOGO_TOSTEREO_INPUT,
+    SOGO_TOSTEREO_INPUT_COUNT
+};
+
+enum SOGO_TOSTEREO_OUTPUTS
+{
+    SOGO_TOSTEREO_OUTPUT,
+    SOGO_TOSTEREO_OUTPUT_COUNT
+};
+
 
 static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
-    RenderOutput* input_data = render_parameters->m_RenderInputs[0].m_RenderOutput;
+    RenderOutput* input_data = render_parameters->m_RenderInputs[SOGO_TOSTEREO_INPUT].m_RenderOutput;
     if (input_data == 0x0)
     {
-        render_parameters->m_RenderOutputs[0].m_Buffer = 0x0;
+        render_parameters->m_RenderOutputs[SOGO_TOSTEREO_OUTPUT].m_Buffer = 0x0;
         return true;
     }
     if (input_data->m_ChannelCount == 2)
     {
-        render_parameters->m_RenderOutputs[0].m_Buffer = input_data->m_Buffer;
-        render_parameters->m_RenderOutputs[0].m_ChannelCount = input_data->m_ChannelCount;
+        render_parameters->m_RenderOutputs[SOGO_TOSTEREO_OUTPUT].m_Buffer = input_data->m_Buffer;
+        render_parameters->m_RenderOutputs[SOGO_TOSTEREO_OUTPUT].m_ChannelCount = input_data->m_ChannelCount;
         input_data->m_Buffer = 0x0;
         return true;
     }
@@ -434,8 +459,8 @@ static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
         return false;
     }
 
-    render_parameters->m_RenderOutputs[0].m_Buffer = stereo_output;
-    render_parameters->m_RenderOutputs[0].m_ChannelCount = 2;
+    render_parameters->m_RenderOutputs[SOGO_TOSTEREO_OUTPUT].m_Buffer = stereo_output;
+    render_parameters->m_RenderOutputs[SOGO_TOSTEREO_OUTPUT].m_ChannelCount = 2;
 
     while (frame_count--)
     {
@@ -446,7 +471,7 @@ static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     return true;
 }
 
-struct OutputDescription ToStereoNodeOutputDescriptions[TOSTEREO_NODE_OUTPUT_COUNT] =
+struct OutputDescription ToStereoNodeOutputDescriptions[SOGO_TOSTEREO_OUTPUT_COUNT] =
 {
     {OutputDescription::FIXED, {2}}
 };
@@ -457,11 +482,11 @@ const NodeDescription ToStereoNodeDescription =
     0x0,
     ToStereoNodeOutputDescriptions,
     0x0,
-    TOSTEREO_INPUT_COUNT,
-    TOSTEREO_NODE_OUTPUT_COUNT,
-    0,
-    0,
-    0
+    SOGO_TOSTEREO_INPUT_COUNT,
+    SOGO_TOSTEREO_OUTPUT_COUNT,
+    SOGO_TOSTEREO_RESOURCE_COUNT,
+    SOGO_TOSTEREO_PARAMETER_COUNT,
+    SOGO_TOSTEREO_TRIGGER_COUNT
 };
 
 ///////////////////// SOGO DC
@@ -472,7 +497,26 @@ enum SOGO_DC_PARAMETERS
     SOGO_DC_PARAMETER_COUNT
 };
 
-static const TOutputIndex DCNODE_OUTPUT_COUNT = 1;
+enum SOGO_DC_RESOURCES
+{
+    SOGO_DC_RESOURCE_COUNT
+};
+
+enum SOGO_DC_TRIGGERS
+{
+    SOGO_DC_TRIGGER_COUNT
+};
+
+enum SOGO_DC_INPUTS
+{
+    SOGO_DC_INPUT_COUNT
+};
+
+enum SOGO_DC_OUTPUTS
+{
+    SOGO_DC_OUTPUT,
+    SOGO_DC_OUTPUT_COUNT
+};
 
 static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
@@ -480,7 +524,7 @@ static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_pa
 
     uint32_t frame_count = render_parameters->m_FrameCount;
     render_parameters->m_RenderOutputs[0].m_Buffer = render_parameters->m_AllocateBuffer(graph, node, 1, frame_count);
-    float* io_buffer = render_parameters->m_RenderOutputs[0].m_Buffer;
+    float* io_buffer = render_parameters->m_RenderOutputs[SOGO_DC_OUTPUT].m_Buffer;
     while (frame_count--)
     {
         *io_buffer++ = level;
@@ -492,7 +536,7 @@ static const ParameterDescription DCParameters[SOGO_DC_PARAMETER_COUNT] = {
     {"Level", 1.0f}
 };
 
-struct OutputDescription DCNodeOutputDescriptions[DCNODE_OUTPUT_COUNT] =
+struct OutputDescription DCNodeOutputDescriptions[SOGO_DC_OUTPUT_COUNT] =
 {
     {OutputDescription::FIXED, {1}}
 };
@@ -503,11 +547,11 @@ const NodeDescription DCNodeDescription =
     DCParameters,
     DCNodeOutputDescriptions,
     0x0,
-    0,
-    DCNODE_OUTPUT_COUNT,
-    0,
+    SOGO_DC_INPUT_COUNT,
+    SOGO_DC_OUTPUT_COUNT,
+    SOGO_DC_RESOURCE_COUNT,
     SOGO_DC_PARAMETER_COUNT,
-    0
+    SOGO_DC_TRIGGER_COUNT
 };
 
 
