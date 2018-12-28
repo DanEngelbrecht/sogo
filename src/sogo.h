@@ -111,9 +111,8 @@ namespace sogo
         RenderOutput**          m_ExternalInputs;
     };
 
-    size_t GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description);
+    bool GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description, size_t& out_size);
     HGraph CreateGraph(void* mem, TFrameRate frame_rate, TFrameCount max_batch_size, const GraphDescription* graph_description);
-    void DisposeGraph(HGraph graph);
 
     TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name);
     bool SetParameter(HGraph graph, TParameterNameHash parameter_hash, float value);
