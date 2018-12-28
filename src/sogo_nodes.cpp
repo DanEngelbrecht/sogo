@@ -7,6 +7,9 @@ namespace sogo {
 
 static const TInputIndex SPLIT_INPUT_COUNT = 1;
 static const TOutputIndex SPLIT_OUTPUT_COUNT = 2;
+static const TResourceIndex SPLIT_RESOURCE_COUNT = 0;
+static const TParameterIndex SPLIT_PARAMETER_COUNT = 0;
+static const TTriggerIndex SPLIT_TRIGGER_COUNT = 0;
 
 static bool RenderSplit(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
@@ -51,13 +54,41 @@ const NodeDescription SplitNodeDescription =
     0x0,
     SPLIT_INPUT_COUNT,
     SPLIT_OUTPUT_COUNT,
-    0,
-    0,
-    0
+    SPLIT_RESOURCE_COUNT,
+    SPLIT_PARAMETER_COUNT,
+    SPLIT_TRIGGER_COUNT
 };
 
 
 ///////////////////// SOGO MERGE
+
+enum SOGO_MERGE_PARAMETERS
+{
+    SOGO_MERGE_PARAMETER_COUNT
+};
+
+enum SOGO_MERGE_RESOURCES
+{
+    SOGO_MERGE_RESOURCE_COUNT
+};
+
+enum SOGO_MERGE_TRIGGERS
+{
+    SOGO_MERGE_TRIGGER_COUNT
+};
+
+enum SOGO_MERGE_INPUTS
+{
+    SOGO_MERGE_INPUT_1,
+    SOGO_MERGE_INPUT_2,
+    SOGO_MERGE_INPUT_COUNT
+};
+
+enum SOGO_MERGE_OUTPUTS
+{
+    SOGO_MERGE_OUTPUT,
+    SOGO_MERGE_OUTPUT_COUNT
+};
 
 static bool RenderMerge(TFrameCount frame_count, RenderOutput* input_data_1, RenderOutput* input_data_2)
 {
@@ -105,7 +136,7 @@ static bool RenderMerge(HGraph , HNode , const RenderParameters* render_paramete
     return true;
 }
 
-struct OutputDescription MergeNodeOutputDescriptions[1] =
+struct OutputDescription MergeNodeOutputDescriptions[SOGO_MERGE_OUTPUT_COUNT] =
 {
     {OutputDescription::PASS_THROUGH, {0}}
 };
@@ -116,11 +147,11 @@ const NodeDescription MergeNodeDescription =
     0x0,
     MergeNodeOutputDescriptions,
     0x0,
-    2,
-    1,
-    0,
-    0,
-    0
+    SOGO_MERGE_INPUT_COUNT,
+    SOGO_MERGE_OUTPUT_COUNT,
+    SOGO_MERGE_RESOURCE_COUNT,
+    SOGO_MERGE_PARAMETER_COUNT,
+    SOGO_MERGE_TRIGGER_COUNT
 };
 
 
@@ -133,9 +164,26 @@ enum SOGO_GAIN_PARAMETERS
     SOGO_GAIN_PARAMETER_COUNT
 };
 
-static const ParameterDescription GainParameters[SOGO_GAIN_PARAMETER_COUNT] = {
-    {"Gain", 1.f},
-    {0x0, 1.f}
+enum SOGO_GAIN_RESOURCES
+{
+    SOGO_GAIN_RESOURCE_COUNT
+};
+
+enum SOGO_GAIN_TRIGGERS
+{
+    SOGO_GAIN_TRIGGER_COUNT
+};
+
+enum SOGO_GAIN_INPUTS
+{
+    SOGO_GAIN_INPUT,
+    SOGO_GAIN_INPUT_COUNT
+};
+
+enum SOGO_GAIN_OUTPUTS
+{
+    SOGO_GAIN_OUTPUT,
+    SOGO_GAIN_OUTPUT_COUNT
 };
 
 static bool GainFlat(float* io_buffer, TChannelCount channel_count, TFrameCount frame_count, float gain)
@@ -212,7 +260,7 @@ static bool RenderGain(TFrameCount frame_count, RenderOutput* output_data, float
 
 static bool RenderGain(HGraph , HNode , const RenderParameters* render_parameters)
 {
-    RenderOutput* input_data = render_parameters->m_RenderInputs[0].m_RenderOutput;
+    RenderOutput* input_data = render_parameters->m_RenderInputs[SOGO_GAIN_INPUT].m_RenderOutput;
     float gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_GAIN_INDEX];
     float filtered_gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX];
     if (input_data->m_Buffer == 0x0)
@@ -224,9 +272,9 @@ static bool RenderGain(HGraph , HNode , const RenderParameters* render_parameter
         return true;
     }
 
-    render_parameters->m_RenderOutputs[0].m_Buffer = input_data->m_Buffer;
+    render_parameters->m_RenderOutputs[SOGO_GAIN_OUTPUT].m_Buffer = input_data->m_Buffer;
     input_data->m_Buffer = 0x0;
-    if (!RenderGain(render_parameters->m_FrameCount, &render_parameters->m_RenderOutputs[0], gain, filtered_gain))
+    if (!RenderGain(render_parameters->m_FrameCount, &render_parameters->m_RenderOutputs[SOGO_GAIN_OUTPUT], gain, filtered_gain))
     {
         return false;
     }
@@ -234,7 +282,12 @@ static bool RenderGain(HGraph , HNode , const RenderParameters* render_parameter
     return true;
 }
 
-struct OutputDescription GainNodeOutputDescriptions[1] =
+static const ParameterDescription GainParameters[SOGO_GAIN_PARAMETER_COUNT] = {
+    {"Gain", 1.f},
+    {0x0, 1.f}
+};
+
+struct OutputDescription GainNodeOutputDescriptions[SOGO_GAIN_OUTPUT_COUNT] =
 {
     {OutputDescription::PASS_THROUGH, {0}}
 };
@@ -245,11 +298,11 @@ const NodeDescription GainNodeDescription =
     GainParameters,
     GainNodeOutputDescriptions,
     0x0,
-    1,
-    1,
-    0,
+    SOGO_GAIN_INPUT_COUNT,
+    SOGO_GAIN_OUTPUT_COUNT,
+    SOGO_GAIN_RESOURCE_COUNT,
     SOGO_GAIN_PARAMETER_COUNT,
-    0
+    SOGO_GAIN_TRIGGER_COUNT
 };
 
 
@@ -266,6 +319,11 @@ enum SOGO_SINE_PARAMETERS
     SOGO_SINE_PARAMETER_COUNT
 };
 
+enum SOGO_SINE_RESOURCES
+{
+    SOGO_SINE_RESOURCE_COUNT
+};
+
 enum SOGO_SINE_TRIGGERS
 {
     SOGO_SINE_TRIGGER_START_INDEX,
@@ -273,15 +331,15 @@ enum SOGO_SINE_TRIGGERS
     SOGO_SINE_TRIGGER_COUNT
 };
 
-static const ParameterDescription SineParameters[SOGO_SINE_PARAMETER_COUNT] = {
-    {"Frequency", 4000.0f},
-    {0x0, 4000.0f},
-    {0x0, 0.0f}
+enum SOGO_SINE_INPUTS
+{
+    SOGO_SINE_INPUT_COUNT
 };
 
-static const TriggerDescription SineTriggers[SOGO_SINE_TRIGGER_COUNT] = {
-    {"Start"},
-    {"Stop"}
+enum SOGO_SINE_OUTPUTS
+{
+    SOGO_SINE_OUTPUT,
+    SOGO_SINE_OUTPUT_COUNT
 };
 
 static bool RenderSine(HGraph graph, HNode node, const RenderParameters* render_parameters)
@@ -310,7 +368,18 @@ static bool RenderSine(HGraph graph, HNode node, const RenderParameters* render_
     return true;
 }
 
-struct OutputDescription SineNodeOutputDescriptions[1] =
+static const ParameterDescription SineParameters[SOGO_SINE_PARAMETER_COUNT] = {
+    {"Frequency", 4000.0f},
+    {0x0, 4000.0f},
+    {0x0, 0.0f}
+};
+
+static const TriggerDescription SineTriggers[SOGO_SINE_TRIGGER_COUNT] = {
+    {"Start"},
+    {"Stop"}
+};
+
+struct OutputDescription SineNodeOutputDescriptions[SOGO_SINE_OUTPUT_COUNT] =
 {
     {OutputDescription::FIXED, {1}}
 };
@@ -321,9 +390,9 @@ const NodeDescription SineNodeDescription =
     SineParameters,
     SineNodeOutputDescriptions,
     SineTriggers,
-    0,
-    1,
-    0,
+    SOGO_SINE_INPUT_COUNT,
+    SOGO_SINE_OUTPUT_COUNT,
+    SOGO_SINE_RESOURCE_COUNT,
     SOGO_SINE_PARAMETER_COUNT,
     SOGO_SINE_TRIGGER_COUNT
 };
@@ -332,6 +401,9 @@ const NodeDescription SineNodeDescription =
 
 
 ///////////////////// SOGO MAKE_STEREO
+
+static const TInputIndex TOSTEREO_INPUT_COUNT = 1;
+static const TOutputIndex TOSTEREO_NODE_OUTPUT_COUNT = 1;
 
 static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
@@ -374,9 +446,6 @@ static bool RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     return true;
 }
 
-static const TInputIndex TOSTEREO_INPUT_COUNT = 1;
-static const TOutputIndex TOSTEREO_NODE_OUTPUT_COUNT = 1;
-
 struct OutputDescription ToStereoNodeOutputDescriptions[TOSTEREO_NODE_OUTPUT_COUNT] =
 {
     {OutputDescription::FIXED, {2}}
@@ -403,9 +472,7 @@ enum SOGO_DC_PARAMETERS
     SOGO_DC_PARAMETER_COUNT
 };
 
-static const ParameterDescription DCParameters[SOGO_DC_PARAMETER_COUNT] = {
-    {"Level", 1.0f}
-};
+static const TOutputIndex DCNODE_OUTPUT_COUNT = 1;
 
 static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
@@ -421,7 +488,9 @@ static bool RenderDC(HGraph graph, HNode node, const RenderParameters* render_pa
     return true;
 }
 
-static const TOutputIndex DCNODE_OUTPUT_COUNT = 1;
+static const ParameterDescription DCParameters[SOGO_DC_PARAMETER_COUNT] = {
+    {"Level", 1.0f}
+};
 
 struct OutputDescription DCNodeOutputDescriptions[DCNODE_OUTPUT_COUNT] =
 {
