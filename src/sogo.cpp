@@ -129,7 +129,7 @@ static bool GetOutputChannelCount(
     const GraphDescription* graph_description,
     TNodeIndex node_index,
     TOutputIndex output_index,
-    TChannelCount& out_channel_count)
+    TChannelIndex& out_channel_count)
 {
     const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
     const OutputDescription* output_description = &node_description->m_OutputDescriptions[output_index];
@@ -170,7 +170,7 @@ static bool GetOutputChannelAllocationCount(
     const GraphDescription* graph_description,
     TNodeIndex node_index,
     TOutputIndex output_index,
-    TChannelCount& out_channel_count)
+    TChannelIndex& out_channel_count)
 {
     const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
     const OutputDescription* output_description = &node_description->m_OutputDescriptions[output_index];
@@ -212,11 +212,11 @@ struct GraphProperties {
     TTriggerIndex m_NamedTriggerCount;
     TInputIndex m_InputCount;
     TOutputIndex m_OutputCount;
-    uint32_t m_SampleBufferSize;
+    TSampleIndex m_SampleBufferSize;
 };
 
 static bool GetGraphProperties(
-    uint32_t max_batch_size,
+    TFrameIndex max_batch_size,
     const GraphDescription* graph_description,
     GraphProperties* graph_properties)
 {
@@ -295,20 +295,20 @@ static size_t GetGraphSize(
         ALIGN_SIZE(sizeof(Resource*) * graph_properties->m_ResourceCount, sizeof(uint8_t)) +
         ALIGN_SIZE((sizeof(uint8_t) * graph_properties->m_TriggerCount), sizeof(RenderCallback)) +
         ALIGN_SIZE(sizeof(Node) * graph_description->m_NodeCount, sizeof(float)) +
-        ALIGN_SIZE(sizeof(float) * graph_properties->m_SampleBufferSize, sizeof(float*)) +
         ALIGN_SIZE(sizeof(RenderOutput) * (graph_properties->m_OutputCount + 1), sizeof(RenderOutput*)) +
         ALIGN_SIZE(sizeof(RenderInput) * graph_properties->m_InputCount, 1);
-    return s;
+    return ALIGN_SIZE(s, sizeof(float));    // Just to make sure it is easy to just add graph and scratch buffer memory without explicit alignement code by caller
 }
 
-bool GetGraphSize(TFrameCount max_batch_size, const GraphDescription* graph_description, size_t& out_size)
+bool GetGraphSize(TFrameIndex max_batch_size, const GraphDescription* graph_description, size_t& out_graph_size, TSampleIndex& out_scratch_buffer_sample_count)
 {
     GraphProperties graph_properties;
     if (!GetGraphProperties(max_batch_size, graph_description, &graph_properties))
     {
         return false;
     }
-    out_size = GetGraphSize(graph_description, &graph_properties);
+    out_graph_size = GetGraphSize(graph_description, &graph_properties);
+    out_scratch_buffer_sample_count = graph_properties.m_SampleBufferSize;
     return true;
 }
 
@@ -351,7 +351,7 @@ static bool ConnectExternal(HGraph graph, TNodeIndex input_node_index, TInputInd
     return true;
 }
 
-static float* AllocateBuffer(HGraph graph, HNode , TChannelCount channel_count, TFrameCount frame_count)
+static float* AllocateBuffer(HGraph graph, HNode , TChannelIndex channel_count, TFrameIndex frame_count)
 {
     uint32_t samples_required = (uint32_t)channel_count * (uint32_t)frame_count;
     uint32_t samples_left = graph->m_ScratchBufferSize - graph->m_ScratchUsedCount;
@@ -364,7 +364,7 @@ static float* AllocateBuffer(HGraph graph, HNode , TChannelCount channel_count, 
     return 0x0;
 }
 
-bool RenderGraph(HGraph graph, TFrameCount frame_count)
+bool RenderGraph(HGraph graph, TFrameIndex frame_count)
 {
     graph->m_ScratchUsedCount = 0;
     Node* nodes = graph->m_Nodes;
@@ -494,9 +494,11 @@ bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_in
     return true;
 }
 
-HGraph CreateGraph(void* mem,
+HGraph CreateGraph(
+    void* graph_mem,
+    float* scratch_buffer,
     TFrameRate frame_rate,
-    TFrameCount max_batch_size,
+    TFrameIndex max_batch_size,
     const GraphDescription* graph_description)
 {
     GraphProperties graph_properties;
@@ -505,7 +507,7 @@ HGraph CreateGraph(void* mem,
         return 0x0;
     }
 
-    uint8_t* ptr = (uint8_t*)mem;
+    uint8_t* ptr = (uint8_t*)graph_mem;
     size_t offset = ALIGN_SIZE(sizeof(Graph), sizeof(void*));
 
     void* parameter_lookup_data = &ptr[offset];
@@ -526,16 +528,13 @@ HGraph CreateGraph(void* mem,
     Node* node_data = (Node*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(Node) * graph_description->m_NodeCount, sizeof(float));
     
-    float* scratch_buffer_data = (float*)&ptr[offset];
-    offset += ALIGN_SIZE(sizeof(float) * graph_properties.m_SampleBufferSize, sizeof(float*));
-    
     RenderInput* render_input_data = (RenderInput*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(RenderInput) * graph_properties.m_InputCount, sizeof(RenderOutput*));
 
     RenderOutput* render_output_data = (RenderOutput*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(RenderOutput) * (graph_properties.m_OutputCount + 1), 1);
 
-    HGraph graph = new (mem) Graph(
+    HGraph graph = new (graph_mem) Graph(
         frame_rate,
         graph_description->m_NodeCount,
         graph_properties.m_ParameterCount,
@@ -552,7 +551,7 @@ HGraph CreateGraph(void* mem,
         trigger_lookup_data,
         triggers_data,
         node_data,
-        scratch_buffer_data,
+        scratch_buffer,
         render_output_data,
         render_input_data);
 
