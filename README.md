@@ -17,7 +17,7 @@ Lightweight sound graph framework
 * External input and outputs (both sound and events) should be easily accessible
 * External access to node parameters
 * External access to node triggers
-* Ideally I would like to make it a single-header library - will try to keep core small, not sure about dependecies - need hashing and hash-to-index lookup which depends on xxHash and JCash/containers currently
+* Ideally I would like to make it a single-header library - will try to keep core small, not sure about dependencies - need hashing and hash-to-index lookup which depends on xxHash and JCash/containers currently
 * Some form or node type registry will be needed but should be built outside of the core
 
 ## Third party libraries
@@ -44,9 +44,14 @@ Building is just the tests right now, no actual application.
 
 ## TODO
 
-* Event triggering - simple "trigger" event or something more complex? A node should be able to trigger other nodes
+* Decide exactly what is part of core and what is not
+* Event triggering - simple "trigger" event or something more complex?
+* How do we handle triggers betwen nodes? A node should be able to trigger other nodes
+* Should a node be able to alter parameters of another node? Doubtful...
 * How to facilitate node specific buffer allocations for things like delay/reverb? Can be frame rate dependant
 * FrameRate is now set at Graph construction, not sure this is a good design choice
 * Authoring tools - considering DearImGUI for this, but haven't decided yet
 * Tons of node types - OGG, WAVE, Pan, Random/Sequential triggers, Mixing, Effects etc
+* Named parameters should probably be global so a specific parameter in a graph has a global name set in the authoring tools - makes scripting use easier as user then only specifies graph and name instead of knowing node index (which may change when graph is modified). Not sure if this should be part of the core or added on top of current api for parameters...
+* Audio output base so it is possible to actually hear the results, not part of core, likely part of separate test app
 * Much more that I forgot to list...
