@@ -17,7 +17,7 @@ Lightweight sound graph framework
 * External input and outputs (both sound and events) should be easily accessible
 * External access to node parameters
 * External access to node triggers
-* Ideally I would like to make it a single-header library - will try to keep core small, not sure about dependecies - need hashing and hash-to-index lookup which currently depends on xxHash and JCash/containers currently
+* Ideally I would like to make it a single-header library - will try to keep core small, not sure about dependecies - need hashing and hash-to-index lookup which depends on xxHash and JCash/containers currently
 * Some form or node type registry will be needed but should be built outside of the core
 
 ## Third party libraries
