@@ -6,12 +6,14 @@ namespace sogo
 {
     typedef uint16_t TNodeIndex;
     typedef uint16_t TParameterIndex;
+    typedef uint16_t TTriggerIndex;
     typedef uint16_t TResourceIndex;
     typedef uint16_t TInputIndex;
     typedef uint16_t TOutputIndex;
     typedef uint16_t TChannelCount;
     typedef uint16_t TConnectionIndex;
     typedef uint32_t TParameterNameHash;
+    typedef uint32_t TTriggerNameHash;
     typedef uint32_t TFrameCount;
     typedef uint32_t TFrameRate;
 
@@ -46,6 +48,7 @@ namespace sogo
         RenderOutput*       m_RenderOutputs;
         float*              m_Parameters;
         Resource**          m_Resources;
+        uint8_t*            m_Triggers;
     };
 
     typedef bool (*RenderCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
@@ -54,6 +57,11 @@ namespace sogo
     {
         const char*     m_ParameterName;
         float           m_InitialValue;
+    };
+
+    struct TriggerDescription
+    {
+        const char*     m_TriggerName;
     };
 
     struct OutputDescription
@@ -76,10 +84,12 @@ namespace sogo
         RenderCallback              m_RenderCallback;
         const ParameterDescription* m_Parameters;
         const OutputDescription*    m_OutputDescriptions;
+        const TriggerDescription*   m_Triggers;
         TInputIndex                 m_InputCount;
         TOutputIndex                m_OutputCount;
         TResourceIndex              m_ResourceCount;
         TParameterIndex             m_ParameterCount;
+        TTriggerIndex               m_TriggerCount;
     };
 
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
@@ -107,6 +117,9 @@ namespace sogo
 
     TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name);
     bool SetParameter(HGraph graph, TParameterNameHash parameter_hash, float value);
+
+    TTriggerNameHash MakeTriggerHash(TNodeIndex node_index, const char* trigger_name);
+    bool Trigger(HGraph graph, TTriggerNameHash trigger_hash);
 
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, Resource* resource);
 

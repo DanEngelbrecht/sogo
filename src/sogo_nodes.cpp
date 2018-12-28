@@ -48,8 +48,10 @@ const NodeDescription SplitNodeDescription =
     RenderSplit,
     0x0,
     SplitNodeOutputDescriptions,
-    1,
+    0x0,
+    SPLIT_INPUT_COUNT,
     SPLIT_OUTPUT_COUNT,
+    0,
     0,
     0
 };
@@ -113,8 +115,10 @@ const NodeDescription MergeNodeDescription =
     RenderMerge,
     0x0,
     MergeNodeOutputDescriptions,
+    0x0,
     2,
     1,
+    0,
     0,
     0
 };
@@ -240,10 +244,12 @@ const NodeDescription GainNodeDescription =
     RenderGain,
     GainParameters,
     GainNodeOutputDescriptions,
+    0x0,
     1,
     1,
     0,
-    SOGO_GAIN_PARAMETER_COUNT
+    SOGO_GAIN_PARAMETER_COUNT,
+    0
 };
 
 
@@ -260,10 +266,22 @@ enum SOGO_SINE_PARAMETERS
     SOGO_SINE_PARAMETER_COUNT
 };
 
+enum SOGO_SINE_TRIGGERS
+{
+    SOGO_SINE_TRIGGER_START_INDEX,
+    SOGO_SINE_TRIGGER_STOP_INDEX,
+    SOGO_SINE_TRIGGER_COUNT
+};
+
 static const ParameterDescription SineParameters[SOGO_SINE_PARAMETER_COUNT] = {
     {"Frequency", 4000.0f},
     {0x0, 4000.0f},
     {0x0, 0.0f}
+};
+
+static const TriggerDescription SineTriggers[SOGO_SINE_TRIGGER_COUNT] = {
+    {"Start"},
+    {"Stop"}
 };
 
 static bool RenderSine(HGraph graph, HNode node, const RenderParameters* render_parameters)
@@ -302,10 +320,12 @@ const NodeDescription SineNodeDescription =
     RenderSine,
     SineParameters,
     SineNodeOutputDescriptions,
+    SineTriggers,
     0,
     1,
     0,
-    SOGO_SINE_PARAMETER_COUNT
+    SOGO_SINE_PARAMETER_COUNT,
+    SOGO_SINE_TRIGGER_COUNT
 };
 
 
@@ -367,8 +387,10 @@ const NodeDescription ToStereoNodeDescription =
     RenderToStereo,
     0x0,
     ToStereoNodeOutputDescriptions,
+    0x0,
     TOSTEREO_INPUT_COUNT,
     TOSTEREO_NODE_OUTPUT_COUNT,
+    0,
     0,
     0
 };
@@ -411,10 +433,12 @@ const NodeDescription DCNodeDescription =
     RenderDC,
     DCParameters,
     DCNodeOutputDescriptions,
+    0x0,
     0,
     DCNODE_OUTPUT_COUNT,
     0,
-    SOGO_DC_PARAMETER_COUNT
+    SOGO_DC_PARAMETER_COUNT,
+    0
 };
 
 
