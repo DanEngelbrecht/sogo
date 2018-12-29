@@ -45,6 +45,8 @@ Building is just the tests right now, no actual application.
 ## TODO
 
 * Decide exactly what is part of core and what is not
+  * Move hash-based lookup of parameters out of code, core uses direct addressing by node index and parameter/trigger index. Authoring tool should allow for making "public named" parameters/triggers that can be used by the runtime outside the core, lookup is name (hash) to node + index.
+  This makes it easier to keep core down and remove dependencies.
 * Event triggering - simple "trigger" event or something more complex?
 * How do we handle triggers betwen nodes? A node should be able to trigger other nodes
 * Should a node be able to alter parameters of another node? Doubtful...
