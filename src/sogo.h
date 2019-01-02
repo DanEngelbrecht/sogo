@@ -12,8 +12,6 @@ namespace sogo
     typedef uint16_t TOutputIndex;
     typedef uint16_t TChannelIndex;
     typedef uint16_t TConnectionIndex;
-    typedef uint32_t TParameterNameHash;
-    typedef uint32_t TTriggerNameHash;
     typedef uint32_t TFrameIndex;
     typedef uint32_t TSampleIndex;
     typedef uint32_t TFrameRate;

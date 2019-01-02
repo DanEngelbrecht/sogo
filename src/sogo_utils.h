@@ -5,6 +5,9 @@
 namespace sogo {
     typedef struct Access* HAccess;
 
+    typedef uint32_t TParameterNameHash;
+    typedef uint32_t TTriggerNameHash;
+
     bool GetAccessSize(const GraphDescription* graph_description, size_t& out_access_size);
     HAccess CreateAccess(void* mem, const GraphDescription* graph_description);
 
