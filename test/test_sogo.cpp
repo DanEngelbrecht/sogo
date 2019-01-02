@@ -1,4 +1,5 @@
 #include "../src/sogo_nodes.h"
+#include "../src/sogo_utils.h"
 
 #include <memory>
 
@@ -67,6 +68,16 @@ static void sogo_simple_graph(SCtx* )
         &sogo::MergeNodeDescription         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
     };
 
+    const char* NODE_NAMES[NODE_COUNT] =
+    {
+        "DC",
+        "DC-Gain",
+        0x0,
+        0x0,
+        "Split-Gain",
+        0x0
+    };
+
     static const uint16_t CONNECTION_COUNT = 6;
     sogo::NodeConnection CONNECTIONS[CONNECTION_COUNT] =
     {
@@ -101,16 +112,28 @@ static void sogo_simple_graph(SCtx* )
         44100,
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
-    TEST_ASSERT_NE(0x0, graph);
+    ASSERT_NE(0x0, graph);
 
-    sogo::TParameterNameHash level_parameter_hash = sogo::MakeParameterHash(0, "Level");
-    ASSERT_TRUE(sogo::SetParameter(graph, level_parameter_hash, 0.5f));
+    size_t access_size = 0;
+    struct sogo::AccessDescription ACCESS_DESCRIPTION =
+    {
+        &GRAPH_DESCRIPTION,
+        NODE_NAMES
+    };
+    ASSERT_TRUE(sogo::GetAccessSize(&ACCESS_DESCRIPTION, &access_size));
+    void* access_mem = malloc(access_size);
+    ASSERT_NE(0x0, access_mem);
+    sogo::HAccess access = sogo::CreateAccess(access_mem, &ACCESS_DESCRIPTION);
+    ASSERT_NE(0x0, access);
 
-    sogo::TParameterNameHash gain_parameter_hash = sogo::MakeParameterHash(1, "Gain");
-    ASSERT_TRUE(sogo::SetParameter(graph, gain_parameter_hash, 0.5f));
+    sogo::TParameterNameHash level_parameter_hash = sogo::MakeParameterHash(sogo::MakeNodeNameHash(NODE_NAMES[0]), "Level");
+    ASSERT_TRUE(sogo::SetParameter(access, graph, level_parameter_hash, 0.5f));
 
-    sogo::TParameterNameHash gain2_parameter_hash = sogo::MakeParameterHash(4, "Gain");
-    ASSERT_TRUE(sogo::SetParameter(graph, gain2_parameter_hash, 2.f));
+    sogo::TParameterNameHash gain_parameter_hash = sogo::MakeParameterHash(sogo::MakeNodeNameHash(NODE_NAMES[1]), "Gain");
+    ASSERT_TRUE(sogo::SetParameter(access, graph, gain_parameter_hash, 0.5f));
+
+    sogo::TParameterNameHash gain2_parameter_hash = sogo::MakeParameterHash(sogo::MakeNodeNameHash(NODE_NAMES[4]), "Gain");
+    ASSERT_TRUE(sogo::SetParameter(access, graph, gain2_parameter_hash, 2.f));
 
     for (uint32_t i = 0; i < 6; ++i)
     {
@@ -132,6 +155,7 @@ static void sogo_simple_graph(SCtx* )
 
         ASSERT_TRUE(render_output->m_Buffer != 0x0);
     }
+    free(access_mem);
     free(graph_mem);
 }
 
