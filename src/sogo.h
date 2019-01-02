@@ -12,8 +12,6 @@ namespace sogo
     typedef uint16_t TOutputIndex;
     typedef uint16_t TChannelIndex;
     typedef uint16_t TConnectionIndex;
-    typedef uint32_t TParameterNameHash;
-    typedef uint32_t TTriggerNameHash;
     typedef uint32_t TFrameIndex;
     typedef uint32_t TSampleIndex;
     typedef uint32_t TFrameRate;
@@ -115,12 +113,8 @@ namespace sogo
     bool GetGraphSize(TFrameIndex max_batch_size, const GraphDescription* graph_description, size_t& out_graph_size, TSampleIndex& out_scratch_buffer_sample_count);
     HGraph CreateGraph(void* graph_mem, float* scratch_buffer, TFrameRate frame_rate, TFrameIndex max_batch_size, const GraphDescription* graph_description);
 
-    TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name);
-    bool SetParameter(HGraph graph, TParameterNameHash parameter_hash, float value);
-
-    TTriggerNameHash MakeTriggerHash(TNodeIndex node_index, const char* trigger_name);
-    bool Trigger(HGraph graph, TTriggerNameHash trigger_hash);
-
+    bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value);
+    bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index);
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, Resource* resource);
 
     bool RenderGraph(HGraph graph, TFrameIndex frame_count);
