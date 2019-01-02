@@ -1,8 +1,5 @@
 #include "sogo.h"
 
-#include "../third-party/containers/src/jc/hashtable.h"
-#include "../third-party/xxHash-1/xxhash.h"
-
 #include <new>
 
 #define ALIGN_SIZE(x, align)    (((x) + ((align) - 1)) & ~((align) - 1))
@@ -20,46 +17,23 @@ struct Node
     TTriggerIndex m_TriggersOffset;
 };
 
-typedef jc::HashTable<TParameterNameHash, TParameterIndex> TParameterLookup;
-typedef jc::HashTable<TTriggerNameHash, TParameterIndex> TTriggerLookup;
-
-uint32_t GetParameterLookupSize(uint32_t num_elements)
-{
-    const uint32_t load_factor    = 100; // percent
-    const uint32_t tablesize      = uint32_t(num_elements / (load_factor/100.0f));
-    return TParameterLookup::CalcSize(tablesize);
-}
-
-uint32_t GetTriggerLookupSize(uint32_t num_elements)
-{
-    const uint32_t load_factor    = 100; // percent
-    const uint32_t tablesize      = uint32_t(num_elements / (load_factor/100.0f));
-    return TTriggerLookup::CalcSize(tablesize);
-}
-
 struct Graph {
     Graph(TFrameRate frame_rate,
         TNodeIndex node_count,
         TParameterIndex parameter_count,
-        TParameterIndex named_parameter_count,
         TResourceIndex resource_count,
         TTriggerIndex trigger_count,
-        TTriggerIndex named_trigger_count,
         uint32_t sample_buffer_size,
         TInputIndex input_count,
         TOutputIndex output_count,
-        void* parameter_lookup_data,
         float* parameters_data,
         Resource** resources_data,
-        void* trigger_lookup_data,
         uint8_t* trigger_data,
         Node* node_data,
         float* scratch_buffer_data,
         RenderOutput* render_output_data,
         RenderInput* render_input_data);
 
-    TParameterLookup m_ParameterLookup;
-    TTriggerLookup m_TriggerLookup;
     float* m_Parameters;
     Resource** m_Resources;
     uint8_t* m_Triggers;
@@ -76,25 +50,19 @@ struct Graph {
 Graph::Graph(TFrameRate frame_rate,
     TNodeIndex node_count,
     TParameterIndex ,
-    TParameterIndex named_parameter_count,
     TResourceIndex resource_count,
     TTriggerIndex trigger_count,
-    TTriggerIndex named_trigger_count,
     uint32_t sample_buffer_size,
     TInputIndex input_count,
     TOutputIndex output_count,
-    void* parameter_lookup_data,
     float* parameters_data,
     Resource** resources_data,
-    void* trigger_lookup_data,
     uint8_t* trigger_data,
     Node* node_data,
     float* scratch_buffer_data,
     RenderOutput* render_output_data,
     RenderInput* render_input_data)
-    : m_ParameterLookup(named_parameter_count, parameter_lookup_data)
-    , m_TriggerLookup(named_trigger_count, trigger_lookup_data)
-    , m_Parameters(parameters_data)
+    : m_Parameters(parameters_data)
     , m_Resources(resources_data)
     , m_Triggers(trigger_data)
     , m_NodeCount(node_count)
@@ -206,10 +174,8 @@ static bool GetOutputChannelAllocationCount(
 
 struct GraphProperties {
     TParameterIndex m_ParameterCount;
-    TParameterIndex m_NamedParameterCount;
     TResourceIndex m_ResourceCount;
     TTriggerIndex m_TriggerCount;
-    TTriggerIndex m_NamedTriggerCount;
     TInputIndex m_InputCount;
     TOutputIndex m_OutputCount;
     TSampleIndex m_SampleBufferSize;
@@ -221,10 +187,8 @@ static bool GetGraphProperties(
     GraphProperties* graph_properties)
 {
     TParameterIndex parameter_count = 0;
-    TParameterIndex named_parameter_count = 0;
     TResourceIndex resource_count = 0;
     TTriggerIndex trigger_count = 0;
-    TTriggerIndex named_trigger_count = 0;
     TInputIndex input_count = 0;
     TOutputIndex output_count = 0;
     uint32_t generated_buffer_count = 0;
@@ -233,22 +197,8 @@ static bool GetGraphProperties(
     {
         const NodeDescription* node_description = graph_description->m_NodeDescriptions[i];
         parameter_count += node_description->m_ParameterCount;
-        for (TParameterIndex p = 0; p < node_description->m_ParameterCount; ++p)
-        {
-            if (node_description->m_Parameters[p].m_ParameterName != 0x0)
-            {
-                named_parameter_count += 1;
-            }
-        }
         resource_count += node_description->m_ResourceCount;
         trigger_count += node_description->m_TriggerCount;
-        for (TTriggerIndex t = 0; t < node_description->m_TriggerCount; ++t)
-        {
-            if (node_description->m_Triggers[t].m_TriggerName != 0x0)
-            {
-                named_trigger_count += 1;
-            }
-        }
         input_count += node_description->m_InputCount;
         output_count += node_description->m_OutputCount;
         for (TOutputIndex j = 0; j < node_description->m_OutputCount; ++j)
@@ -274,10 +224,8 @@ static bool GetGraphProperties(
     uint32_t sample_buffer_size = generated_buffer_count * max_batch_size;
 
     graph_properties->m_ParameterCount = parameter_count;
-    graph_properties->m_NamedParameterCount = named_parameter_count;
     graph_properties->m_ResourceCount = resource_count;
     graph_properties->m_TriggerCount = trigger_count;
-    graph_properties->m_NamedTriggerCount = named_trigger_count;
     graph_properties->m_InputCount = input_count;
     graph_properties->m_OutputCount = output_count;
     graph_properties->m_SampleBufferSize = sample_buffer_size;
@@ -289,8 +237,6 @@ static size_t GetGraphSize(
     const GraphProperties* graph_properties)
 {
     size_t s = ALIGN_SIZE(sizeof(Graph), sizeof(void*)) +
-        ALIGN_SIZE(GetParameterLookupSize(graph_properties->m_NamedParameterCount), sizeof(void*)) +
-        ALIGN_SIZE(GetTriggerLookupSize(graph_properties->m_NamedTriggerCount), sizeof(float)) +
         ALIGN_SIZE(sizeof(float) * graph_properties->m_ParameterCount, sizeof(Resource*)) +
         ALIGN_SIZE(sizeof(Resource*) * graph_properties->m_ResourceCount, sizeof(uint8_t)) +
         ALIGN_SIZE((sizeof(uint8_t) * graph_properties->m_TriggerCount), sizeof(RenderCallback)) +
@@ -310,20 +256,6 @@ bool GetGraphSize(TFrameIndex max_batch_size, const GraphDescription* graph_desc
     out_graph_size = GetGraphSize(graph_description, &graph_properties);
     out_scratch_buffer_sample_count = graph_properties.m_SampleBufferSize;
     return true;
-}
-
-TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name)
-{
-    XXH32_hash_t index_hash = XXH32(&node_index, sizeof(TNodeIndex), 0);
-    XXH32_hash_t hash = XXH32(parameter_name, strlen(parameter_name), index_hash);
-    return (TParameterNameHash)hash;
-}
-
-TTriggerNameHash MakeTriggerHash(TNodeIndex node_index, const char* trigger_name)
-{
-    XXH32_hash_t index_hash = XXH32(&node_index, sizeof(TNodeIndex), 0);
-    XXH32_hash_t hash = XXH32(trigger_name, strlen(trigger_name), index_hash);
-    return (TTriggerNameHash)hash;
 }
 
 static bool ConnectInternal(HGraph graph, TNodeIndex input_node_index, TInputIndex input_index, TNodeIndex output_node_index, TOutputIndex output_index)
@@ -396,29 +328,31 @@ bool RenderGraph(HGraph graph, TFrameIndex frame_count)
     return true;
 }
 
-bool SetParameter(HGraph graph, TParameterNameHash parameter_hash, float value)
+bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value)
 {
-    TParameterIndex* index = graph->m_ParameterLookup.Get(parameter_hash);
-    if (index == 0x0)
+    if (node_index >= graph->m_NodeCount)
     {
         return false;
     }
-    graph->m_Parameters[*index] = value;
+    Node* node = &graph->m_Nodes[node_index];
+    TParameterIndex paramter_offset = node->m_ParametersOffset + parameter_index;
+    graph->m_Parameters[paramter_offset] = value;
     return true;
 }
 
-bool Trigger(HGraph graph, TTriggerNameHash trigger_hash)
+bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index)
 {
-    TTriggerIndex* index = graph->m_TriggerLookup.Get(trigger_hash);
-    if (index == 0x0)
+    if (node_index >= graph->m_NodeCount)
     {
         return false;
     }
-    if (graph->m_Triggers[*index] == 255)
+    Node* node = &graph->m_Nodes[node_index];
+    TTriggerIndex trigger_offset = node->m_TriggersOffset + trigger_index;
+    if (graph->m_Triggers[trigger_offset] == 255)
     {
         return false;
     }
-    graph->m_Triggers[*index] += 1;
+    graph->m_Triggers[trigger_offset] += 1;
     return true;
 }
 
@@ -426,20 +360,6 @@ RenderOutput* GetOutput(HGraph graph, TNodeIndex node_index, TOutputIndex output
 {
     Node* node = &graph->m_Nodes[node_index];
     return &graph->m_RenderOutputs[node->m_OutputsOffset + output_index];
-}
-
-static bool RegisterNamedParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, const char* parameter_name)
-{
-    uint32_t node_key = MakeParameterHash(node_index, parameter_name);
-    graph->m_ParameterLookup.Put(node_key, parameter_index);
-    return true;
-}
-
-static bool RegisterNamedTrigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index, const char* trigger_name)
-{
-    uint32_t node_key = MakeTriggerHash(node_index, trigger_name);
-    graph->m_TriggerLookup.Put(node_key, trigger_index);
-    return true;
 }
 
 static bool MakeNode(HGraph graph, const NodeDescription* node_description, TNodeIndex& node_offset, TInputIndex& input_offset, TOutputIndex& output_offset, TParameterIndex& parameters_offset, TResourceIndex& resources_offset, TTriggerIndex& triggers_offset)
@@ -464,25 +384,12 @@ static bool MakeNode(HGraph graph, const NodeDescription* node_description, TNod
     {
         const ParameterDescription* parameter_description = &node_description->m_Parameters[i];
         graph->m_Parameters[node.m_ParametersOffset + i] = parameter_description->m_InitialValue;
-        if (parameter_description->m_ParameterName != 0x0)
-        {
-            if (!RegisterNamedParameter(graph, node_index, node.m_ParametersOffset + i, parameter_description->m_ParameterName))
-            {
-                return false;
-            }
-        }
     }
 
     for (TTriggerIndex i = 0; i < node_description->m_TriggerCount; ++i)
     {
         const TriggerDescription* trigger_description = &node_description->m_Triggers[i];
-        if (trigger_description->m_TriggerName != 0x0)
-        {
-            if (!RegisterNamedTrigger(graph, node_index, node.m_TriggersOffset + i, trigger_description->m_TriggerName))
-            {
-                return false;
-            }
-        }
+        graph->m_Triggers[node.m_TriggersOffset + i] = 0;
     }
     return true;
 }
@@ -510,12 +417,6 @@ HGraph CreateGraph(
     uint8_t* ptr = (uint8_t*)graph_mem;
     size_t offset = ALIGN_SIZE(sizeof(Graph), sizeof(void*));
 
-    void* parameter_lookup_data = &ptr[offset];
-    offset += ALIGN_SIZE(GetParameterLookupSize(graph_properties.m_NamedParameterCount), sizeof(void*));
-
-    void* trigger_lookup_data = &ptr[offset];
-    offset += ALIGN_SIZE(GetTriggerLookupSize(graph_properties.m_NamedTriggerCount), sizeof(float));
-
     float* parameters_data = (float*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(float) * graph_properties.m_ParameterCount, sizeof(Resource*));
 
@@ -538,17 +439,13 @@ HGraph CreateGraph(
         frame_rate,
         graph_description->m_NodeCount,
         graph_properties.m_ParameterCount,
-        graph_properties.m_NamedParameterCount,
         graph_properties.m_ResourceCount,
         graph_properties.m_TriggerCount,
-        graph_properties.m_NamedTriggerCount,
         graph_properties.m_SampleBufferSize,
         graph_properties.m_InputCount,
         graph_properties.m_OutputCount + 1,
-        parameter_lookup_data,
         parameters_data,
         resources_data,
-        trigger_lookup_data,
         triggers_data,
         node_data,
         scratch_buffer,

@@ -48,6 +48,7 @@ Building is just the tests right now, no actual application.
   * Move hash-based lookup of parameters out of code, core uses direct addressing by node index and parameter/trigger index. Authoring tool should allow for making "public named" parameters/triggers that can be used by the runtime outside the core, lookup is name (hash) to node + index.
   This makes it easier to keep core down and remove dependencies.
 * Event triggering - simple "trigger" event or something more complex?
+  * Triggers need to be queued - can't have just a "trigger x was triggered n times since last render call". Order matters for triggers - start vs stop etc.
 * How do we handle triggers betwen nodes? A node should be able to trigger other nodes
 * Should a node be able to alter parameters of another node? Doubtful...
 * How to facilitate node specific buffer allocations for things like delay/reverb? Can be frame rate dependant
@@ -55,5 +56,6 @@ Building is just the tests right now, no actual application.
 * Authoring tools - considering DearImGUI for this, but haven't decided yet
 * Tons of node types - OGG, WAVE, Pan, Random/Sequential triggers, Mixing, Effects etc
 * Named parameters should probably be global so a specific parameter in a graph has a global name set in the authoring tools - makes scripting use easier as user then only specifies graph and name instead of knowing node index (which may change when graph is modified). Not sure if this should be part of the core or added on top of current api for parameters...
+  * Similar option is that in authoring tools you can name a node and then address it outside using hash of node name and hash of parameter name, add lookup from name to node index?
 * Audio output base so it is possible to actually hear the results, not part of core, likely part of separate test app
 * Much more that I forgot to list...
