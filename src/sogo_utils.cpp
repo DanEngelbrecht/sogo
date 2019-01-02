@@ -39,7 +39,8 @@ uint32_t GetTriggerLookupSize(uint32_t num_elements)
 }
 
 struct Access {
-    Access(TParameterIndex named_parameter_count,
+    Access(
+        TParameterIndex named_parameter_count,
         TTriggerIndex named_trigger_count,
         void* parameter_lookup_data,
         void* trigger_lookup_data);
@@ -48,7 +49,8 @@ struct Access {
     TTriggerLookup m_TriggerLookup;
 };
 
-Access::Access(TParameterIndex named_parameter_count,
+Access::Access(
+        TParameterIndex named_parameter_count,
         TTriggerIndex named_trigger_count,
         void* parameter_lookup_data,
         void* trigger_lookup_data)
@@ -64,27 +66,32 @@ struct AccessProperties
     TTriggerIndex m_NamedTriggerCount;
 };
 
-static bool GetGraphProperties(
-    const GraphDescription* graph_description,
+static bool GetAccessProperties(
+    const AccessDescription* access_description,
     AccessProperties* out_access_properties)
 {
     TParameterIndex named_parameter_count = 0;
     TTriggerIndex named_trigger_count = 0;
+
+    const GraphDescription* graph_description = access_description->m_GraphDescription;
     for (TNodeIndex i = 0; i < graph_description->m_NodeCount; ++i)
     {
-        const NodeDescription* node_description = graph_description->m_NodeDescriptions[i];
-        for (TParameterIndex p = 0; p < node_description->m_ParameterCount; ++p)
+        if (access_description->m_NodeNames[i] != 0x0)
         {
-            if (node_description->m_Parameters[p].m_ParameterName != 0x0)
+            const NodeDescription* node_description = graph_description->m_NodeDescriptions[i];
+            for (TParameterIndex p = 0; p < node_description->m_ParameterCount; ++p)
             {
-                named_parameter_count += 1;
+                if (node_description->m_Parameters[p].m_ParameterName != 0x0)
+                {
+                    named_parameter_count += 1;
+                }
             }
-        }
-        for (TTriggerIndex t = 0; t < node_description->m_TriggerCount; ++t)
-        {
-            if (node_description->m_Triggers[t].m_TriggerName != 0x0)
+            for (TTriggerIndex t = 0; t < node_description->m_TriggerCount; ++t)
             {
-                named_trigger_count += 1;
+                if (node_description->m_Triggers[t].m_TriggerName != 0x0)
+                {
+                    named_trigger_count += 1;
+                }
             }
         }
     }
@@ -94,45 +101,49 @@ static bool GetGraphProperties(
 }
 
 static size_t GetAccessSize(
-    const GraphDescription* graph_description,
+    const AccessDescription* access_description,
     const AccessProperties* access_properties)
 {
     size_t s = ALIGN_SIZE(sizeof(Access), sizeof(void*)) +
-    ALIGN_SIZE(GetParameterLookupSize(access_properties->m_NamedParameterCount), sizeof(void*)) +
-    ALIGN_SIZE(GetTriggerLookupSize(access_properties->m_NamedTriggerCount), sizeof(float));
+                ALIGN_SIZE(GetParameterLookupSize(access_properties->m_NamedParameterCount), sizeof(void*)) +
+                ALIGN_SIZE(GetTriggerLookupSize(access_properties->m_NamedTriggerCount), sizeof(float));
     return s;
 }
 
 bool GetAccessSize(
-    const GraphDescription* graph_description,
+    const AccessDescription* access_description,
     size_t& out_access_size)
 {
     AccessProperties access_properties;
-    if (!GetGraphProperties(graph_description, &access_properties))
+    if (!GetAccessProperties(access_description, &access_properties))
     {
         return false;
     }
-    out_access_size = GetAccessSize(graph_description, &access_properties);
+    out_access_size = GetAccessSize(access_description, &access_properties);
     return true;
 }
 
-TParameterNameHash MakeParameterHash(TNodeIndex node_index, const char* parameter_name)
+TNodeNameHash MakeNodeNameHash(const char* node_name)
 {
-    XXH32_hash_t index_hash = XXH32(&node_index, sizeof(TNodeIndex), 0);
-    XXH32_hash_t hash = XXH32(parameter_name, strlen(parameter_name), index_hash);
+    XXH32_hash_t hash = XXH32(node_name, strlen(node_name), 0);
+    return (TNodeNameHash)hash;
+}
+
+TParameterNameHash MakeParameterHash(TNodeNameHash node_name_hash, const char* parameter_name)
+{
+    XXH32_hash_t hash = XXH32(parameter_name, strlen(parameter_name), node_name_hash);
     return (TParameterNameHash)hash;
 }
 
-TTriggerNameHash MakeTriggerHash(TNodeIndex node_index, const char* trigger_name)
+TTriggerNameHash MakeTriggerHash(TNodeNameHash node_name_hash, const char* trigger_name)
 {
-    XXH32_hash_t index_hash = XXH32(&node_index, sizeof(TNodeIndex), 0);
-    XXH32_hash_t hash = XXH32(trigger_name, strlen(trigger_name), index_hash);
+    XXH32_hash_t hash = XXH32(trigger_name, strlen(trigger_name), node_name_hash);
     return (TTriggerNameHash)hash;
 }
 
-static bool RegisterNamedParameter(HAccess access, TNodeIndex node_index, TParameterIndex parameter_index, const char* parameter_name)
+static bool RegisterNamedParameter(HAccess access, TNodeIndex node_index, TParameterIndex parameter_index, TNodeNameHash node_name_hash, const char* parameter_name)
 {
-    uint32_t node_key = MakeParameterHash(node_index, parameter_name);
+    uint32_t node_key = MakeParameterHash(node_name_hash, parameter_name);
     ParameterTarget target;
     target.m_NodeIndex = node_index;
     target.m_ParameterIndex = parameter_index;
@@ -140,9 +151,9 @@ static bool RegisterNamedParameter(HAccess access, TNodeIndex node_index, TParam
     return true;
 }
 
-static bool RegisterNamedTrigger(HAccess access, TNodeIndex node_index, TTriggerIndex trigger_index, const char* trigger_name)
+static bool RegisterNamedTrigger(HAccess access, TNodeIndex node_index, TTriggerIndex trigger_index, TNodeNameHash node_name_hash, const char* trigger_name)
 {
-    uint32_t node_key = MakeTriggerHash(node_index, trigger_name);
+    uint32_t node_key = MakeTriggerHash(node_name_hash, trigger_name);
     TriggerTarget target;
     target.m_NodeIndex = node_index;
     target.m_TriggerIndex = trigger_index;
@@ -152,10 +163,10 @@ static bool RegisterNamedTrigger(HAccess access, TNodeIndex node_index, TTrigger
 
 HAccess CreateAccess(
     void* access_mem,
-    const GraphDescription* graph_description)
+    const AccessDescription* access_description)
 {
     AccessProperties access_properties;
-    if (!GetGraphProperties(graph_description, &access_properties))
+    if (!GetAccessProperties(access_description, &access_properties))
     {
         return 0x0;
     }
@@ -178,29 +189,34 @@ HAccess CreateAccess(
     TParameterIndex parameters_offset = 0;
     TTriggerIndex triggers_offset = 0;
 
+    const GraphDescription* graph_description = access_description->m_GraphDescription;
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
     {
-        const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
-        for (TParameterIndex i = 0; i < node_description->m_ParameterCount; ++i)
+        if (access_description->m_NodeNames[node_index] != 0x0)
         {
-            const ParameterDescription* parameter_description = &node_description->m_Parameters[i];
-            if (parameter_description->m_ParameterName != 0x0)
+            TNodeNameHash node_name_hash = MakeNodeNameHash(access_description->m_NodeNames[node_index]);
+            const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
+            for (TParameterIndex i = 0; i < node_description->m_ParameterCount; ++i)
             {
-                if (!RegisterNamedParameter(access, node_index, i, parameter_description->m_ParameterName))
+                const ParameterDescription* parameter_description = &node_description->m_Parameters[i];
+                if (parameter_description->m_ParameterName != 0x0)
                 {
-                    return 0x0;
+                    if (!RegisterNamedParameter(access, node_index, i, node_name_hash, parameter_description->m_ParameterName))
+                    {
+                        return 0x0;
+                    }
                 }
             }
-        }
 
-        for (TTriggerIndex i = 0; i < node_description->m_TriggerCount; ++i)
-        {
-            const TriggerDescription* trigger_description = &node_description->m_Triggers[i];
-            if (trigger_description->m_TriggerName != 0x0)
+            for (TTriggerIndex i = 0; i < node_description->m_TriggerCount; ++i)
             {
-                if (!RegisterNamedTrigger(access, node_index, i, trigger_description->m_TriggerName))
+                const TriggerDescription* trigger_description = &node_description->m_Triggers[i];
+                if (trigger_description->m_TriggerName != 0x0)
                 {
-                    return 0x0;
+                    if (!RegisterNamedTrigger(access, node_index, i, node_name_hash, trigger_description->m_TriggerName))
+                    {
+                        return 0x0;
+                    }
                 }
             }
         }
@@ -220,7 +236,7 @@ bool SetParameter(HAccess access, HGraph graph, TParameterNameHash parameter_has
 
 bool Trigger(HAccess access, HGraph graph, TTriggerNameHash trigger_hash)
 {
-    TriggerTarget* target = access->m_ParameterLookup.Get(trigger_hash);
+    TriggerTarget* target = access->m_TriggerLookup.Get(trigger_hash);
     if (target == 0x0)
     {
         return false;
