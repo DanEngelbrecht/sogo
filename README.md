@@ -45,8 +45,6 @@ Building is just the tests right now, no actual application.
 ## TODO
 
 * Decide exactly what is part of core and what is not
-  * Move hash-based lookup of parameters out of code, core uses direct addressing by node index and parameter/trigger index. Authoring tool should allow for making "public named" parameters/triggers that can be used by the runtime outside the core, lookup is name (hash) to node + index.
-  This makes it easier to keep core down and remove dependencies.
 * Event triggering - simple "trigger" event or something more complex?
   * Triggers need to be queued - can't have just a "trigger x was triggered n times since last render call". Order matters for triggers - start vs stop etc.
 * How do we handle triggers betwen nodes? A node should be able to trigger other nodes
@@ -59,3 +57,7 @@ Building is just the tests right now, no actual application.
   * Similar option is that in authoring tools you can name a node and then address it outside using hash of node name and hash of parameter name, add lookup from name to node index?
 * Audio output base so it is possible to actually hear the results, not part of core, likely part of separate test app
 * Much more that I forgot to list...
+
+## DONE
+  * DONE: Move hash-based lookup of parameters out of code, core uses direct addressing by node index and parameter/trigger index. Authoring tool should allow for making "public named" parameters/triggers that can be used by the runtime outside the core, lookup is name (hash) to node + index.
+  This makes it easier to keep core down and remove dependencies.
