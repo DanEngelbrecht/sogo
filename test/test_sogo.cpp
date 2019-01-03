@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#define ALIGN_SIZE(x, align)    (((x) + ((align) - 1)) & ~((align) - 1))
+
 typedef struct SCtx
 {
 } SCtx;
@@ -40,12 +42,16 @@ static void sogo_create(SCtx* )
     size_t graph_size = 0;
     sogo::TSampleIndex out_scratch_buffer_sample_count;
     ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size, out_scratch_buffer_sample_count));
-    void* graph_mem = malloc(graph_size + out_scratch_buffer_sample_count * sizeof(float));
+    graph_size = ALIGN_SIZE(graph_size, sizeof(float));
+    size_t audio_buffer_size = out_scratch_buffer_sample_count * sizeof(float);
+    void* graph_mem = malloc(graph_size + audio_buffer_size);
     ASSERT_NE(0x0, graph_mem);
+
+    float* audio_buffer_mem = (float*)&((uint8_t*)graph_mem)[graph_size];
 
     sogo::HGraph graph = sogo::CreateGraph(
         graph_mem,
-        (float*)&((uint8_t*)graph_mem)[graph_size],
+        audio_buffer_mem,
         44100,
         MAX_BATCH_SIZE,
         &GRAPH_DESCRIPTION);
@@ -103,16 +109,7 @@ static void sogo_simple_graph(SCtx* )
     size_t graph_size = 0;
     sogo::TSampleIndex out_scratch_buffer_sample_count;
     ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size, out_scratch_buffer_sample_count));
-    void* graph_mem = malloc(graph_size + out_scratch_buffer_sample_count * sizeof(float));
-    ASSERT_NE(0x0, graph_mem);
-
-    sogo::HGraph graph = sogo::CreateGraph(
-        graph_mem,
-        (float*)&((uint8_t*)graph_mem)[graph_size],
-        44100,
-        MAX_BATCH_SIZE,
-        &GRAPH_DESCRIPTION);
-    ASSERT_NE(0x0, graph);
+    graph_size = ALIGN_SIZE(graph_size, sizeof(void*));
 
     size_t access_size = 0;
     struct sogo::AccessDescription ACCESS_DESCRIPTION =
@@ -120,9 +117,25 @@ static void sogo_simple_graph(SCtx* )
         &GRAPH_DESCRIPTION,
         NODE_NAMES
     };
+
     ASSERT_TRUE(sogo::GetAccessSize(&ACCESS_DESCRIPTION, &access_size));
-    void* access_mem = malloc(access_size);
-    ASSERT_NE(0x0, access_mem);
+    access_size = ALIGN_SIZE(access_size, sizeof(float));
+    size_t audio_buffer_size = out_scratch_buffer_sample_count * sizeof(float);
+
+    void* mem = malloc(graph_size + access_size + audio_buffer_size);
+    ASSERT_NE(0x0, mem);
+
+    void* graph_mem = mem;
+    void* access_mem = (void*)&((uint8_t*)mem)[graph_size];
+    float* audio_buffer_mem = (float*)&((uint8_t*)access_mem)[access_size];
+    sogo::HGraph graph = sogo::CreateGraph(
+        graph_mem,
+        audio_buffer_mem,
+        44100,
+        MAX_BATCH_SIZE,
+        &GRAPH_DESCRIPTION);
+    ASSERT_NE(0x0, graph);
+
     sogo::HAccess access = sogo::CreateAccess(access_mem, &ACCESS_DESCRIPTION);
     ASSERT_NE(0x0, access);
 
@@ -138,7 +151,7 @@ static void sogo_simple_graph(SCtx* )
     for (uint32_t i = 0; i < 6; ++i)
     {
         ASSERT_TRUE(sogo::RenderGraph(graph, MAX_BATCH_SIZE));
-        sogo::RenderOutput* render_output = sogo::GetOutput(graph, 5, 0);
+        sogo::AudioOutput* render_output = sogo::GetAudioOutput(graph, 5, 0);
 
         ASSERT_TRUE(render_output != 0x0);
         ASSERT_EQ(2, render_output->m_ChannelCount);
@@ -155,8 +168,7 @@ static void sogo_simple_graph(SCtx* )
 
         ASSERT_TRUE(render_output->m_Buffer != 0x0);
     }
-    free(access_mem);
-    free(graph_mem);
+    free(mem);
 }
 
 static void sogo_merge_graphs(SCtx* )
