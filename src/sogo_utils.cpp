@@ -243,4 +243,5 @@ bool Trigger(HAccess access, HGraph graph, TTriggerNameHash trigger_hash)
     }
     return Trigger(graph, target->m_NodeIndex, target->m_TriggerIndex);
 }
+
 }
