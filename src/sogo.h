@@ -6,7 +6,8 @@ namespace sogo
 {
     typedef uint16_t TNodeIndex;
     typedef uint16_t TParameterIndex;
-    typedef uint16_t TTriggerIndex;
+    typedef uint8_t  TTriggerIndex;
+    typedef uint16_t TTriggerCount;
     typedef uint16_t TResourceIndex;
     typedef uint16_t TAudioInputIndex;
     typedef uint16_t TAudioOutputIndex;
@@ -24,8 +25,20 @@ namespace sogo
 
     struct AudioInput
     {
-        AudioOutput*   m_AudioOutput;
+        AudioOutput*    m_AudioOutput;
     };
+
+    struct TriggerInput
+    {
+        TTriggerIndex*  m_Buffer;
+        TTriggerCount   m_Count;
+    };
+
+//    struct TriggerOutput
+//    {
+//        TriggerInput* m_TriggerInput;
+//        TTriggerIndex m_TriggerIndex;
+//    };
 
     struct Resource
     {
@@ -47,7 +60,8 @@ namespace sogo
         AudioOutput*            m_AudioOutputs;
         float*                  m_Parameters;
         Resource**              m_Resources;
-        uint8_t*                m_Triggers;
+        TriggerInput*           m_TriggerInput;
+//        TTriggerOutput*         m_TriggerOutputs;
     };
 
     typedef bool (*RenderCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
@@ -88,7 +102,7 @@ namespace sogo
         TAudioOutputIndex               m_AudioOutputCount;
         TResourceIndex                  m_ResourceCount;
         TParameterIndex                 m_ParameterCount;
-        TTriggerIndex                   m_TriggerCount;
+        TTriggerCount                   m_TriggerCount;
     };
 
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
@@ -110,8 +124,8 @@ namespace sogo
         AudioOutput**           m_ExternalAudioInputs;
     };
 
-    bool GetGraphSize(TFrameIndex max_batch_size, const GraphDescription* graph_description, size_t& out_graph_size, TSampleIndex& out_scratch_buffer_sample_count);
-    HGraph CreateGraph(void* graph_mem, float* scratch_buffer, TFrameRate frame_rate, TFrameIndex max_batch_size, const GraphDescription* graph_description);
+    bool GetGraphSize(TFrameIndex max_batch_size, TTriggerCount max_trigger_event_count, const GraphDescription* graph_description, size_t& out_graph_size, TTriggerCount& out_trigger_index_buffer_size, TSampleIndex& out_scratch_buffer_sample_count);
+    HGraph CreateGraph(void* graph_mem, TFrameIndex max_batch_size, TTriggerCount max_trigger_event_count, TTriggerIndex* trigger_buffer, float* scratch_buffer, TFrameRate frame_rate, const GraphDescription* graph_description);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value);
     bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index);
