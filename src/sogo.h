@@ -4,18 +4,27 @@
 
 namespace sogo
 {
+    // Index is offset inside parent struct - index of node in graph, index of audio output in node etc
+    // Count is how many of a something - number of triggers queued, number of frames to render
+    // Offset is how far into a global array something is - offset to first audio input of a node in the graphs audio input array
+
     typedef uint16_t TNodeIndex;
-    typedef uint16_t TParameterIndex;
+    typedef uint8_t TParameterIndex;
     typedef uint8_t  TTriggerIndex;
     typedef uint16_t TTriggerCount;
-    typedef uint16_t TResourceIndex;
-    typedef uint16_t TAudioInputIndex;
-    typedef uint16_t TAudioOutputIndex;
-    typedef uint16_t TChannelIndex;
-    typedef uint16_t TConnectionIndex;
+    typedef uint8_t TResourceIndex;
+    typedef uint8_t TAudioInputIndex;
+    typedef uint8_t TAudioOutputIndex;
+    typedef uint8_t TChannelIndex;
+    typedef uint8_t TConnectionIndex;
     typedef uint32_t TFrameIndex;
     typedef uint32_t TSampleIndex;
     typedef uint32_t TFrameRate;
+    typedef uint32_t TContextMemorySize;
+    typedef uint32_t TGraphSize;
+    typedef uint32_t TTriggerBufferSize;
+    typedef uint32_t TScratchBufferSize;
+    typedef uint32_t TContextMemorySize;
 
     struct AudioOutput
     {
@@ -52,7 +61,7 @@ namespace sogo
     typedef float* (*AllocateAudioBufferFunc)(HGraph graph, HNode node, TChannelIndex channel_count, TFrameIndex frame_count);
 
     // TODO: Need to sort out naming - description vs properties!
-    struct GraphProperties
+    struct GraphRuntimeSettings
     {
         TFrameRate m_FrameRate;
         TFrameIndex m_MaxBatchSize;
@@ -75,12 +84,12 @@ namespace sogo
 
     struct NodeProperties
     {
-        size_t m_ContextMemorySize;
+        TContextMemorySize m_ContextMemorySize;
     };
 
-    typedef void (*GetNodePropertiesCallback)(const GraphProperties* graph_properties, const NodeDescription* node_description);
-    typedef void (*SetupNodeCallback)(const GraphProperties* graph_properties, const NodeDescription* node_description, void* context_memory);
-    typedef bool (*RenderNodeCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
+    typedef void (*GetNodePropertiesCallback)(const GraphRuntimeSettings* graph_runtime_settings, NodeProperties* out_node_properties);
+    typedef void (*SetupNodeCallback)(const GraphRuntimeSettings* graph_runtime_settings, const NodeDescription* node_description, void* context_memory);
+    typedef void (*RenderNodeCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
 
     struct ParameterDescription
     {
@@ -120,7 +129,7 @@ namespace sogo
         TAudioOutputIndex               m_AudioOutputCount;
         TResourceIndex                  m_ResourceCount;
         TParameterIndex                 m_ParameterCount;
-        TTriggerCount                   m_TriggerCount;
+        TTriggerIndex                   m_TriggerCount;
     };
 
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
@@ -135,20 +144,20 @@ namespace sogo
 
     struct GraphDescription
     {
-        const GraphProperties*  m_GraphProperties;
-        TNodeIndex              m_NodeCount;
-        const NodeDescription** m_NodeDescriptions;
-        TConnectionIndex        m_ConnectionCount;
-        const NodeConnection*   m_NodeConnections;
-        AudioOutput**           m_ExternalAudioInputs;
+        const GraphRuntimeSettings* m_GraphRuntimeSettings;
+        TNodeIndex                  m_NodeCount;
+        const NodeDescription**     m_NodeDescriptions;
+        TConnectionIndex            m_ConnectionCount;
+        const NodeConnection*       m_NodeConnections;
+        AudioOutput**               m_ExternalAudioInputs;
     };
 
     struct GraphSize
     {
-        size_t m_GraphSize;
-        size_t m_TriggerBufferSize;
-        size_t m_ScratchBufferSize;
-        size_t m_ContextMemorySize;
+        TGraphSize m_GraphSize;
+        TTriggerBufferSize m_TriggerBufferSize;
+        TScratchBufferSize m_ScratchBufferSize;
+        TContextMemorySize m_ContextMemorySize;
     };
 
     struct GraphBuffers
@@ -159,13 +168,13 @@ namespace sogo
         void* m_ContextMem;         // No need to align, 
     };
 
-    bool GetGraphSize(const GraphDescription* graph_description, GraphSize& out_graph_size);
+    bool GetGraphSize(const GraphDescription* graph_description, GraphSize* out_graph_size);
     HGraph CreateGraph(const GraphDescription* graph_description, const GraphBuffers* graph_buffers);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value);
     bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index);
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, Resource* resource);
 
-    bool RenderGraph(HGraph graph, TFrameIndex frame_count);
+    void RenderGraph(HGraph graph, TFrameIndex frame_count);
     AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
 }
