@@ -46,10 +46,8 @@ Building is just the tests right now, no actual application.
 
 * Decide exactly what is part of core and what is not
 * Event triggering - simple "trigger" event or something more complex?
-  * Triggers need to be queued - can't have just a "trigger x was triggered n times since last render call". Order matters for triggers - start vs stop etc.
-  * How to accomodate a trigger queue without allocating a queue size per node/trigger? Or is this exactly what we do? Check all triggers and allocate one buffer for all trigger queues and have m_TriggerQueueOffset per node?
-  * Queue is array of TTriggerIndex
-* How do we handle triggers betwen nodes? A node should be able to trigger other nodes
+  * A node can trigger another node using the Trigger(graph, node_index, trigger_index).
+  * Need trigger input and output and connections - rename NodeConnection to AudioConnection?
 * Should a node be able to alter parameters of another node? Doubtful...
 * How to facilitate node specific buffer allocations for things like delay/reverb? Can be frame rate dependant
 * FrameRate is now set at Graph construction, not sure this is a good design choice
@@ -62,4 +60,7 @@ Building is just the tests right now, no actual application.
 * Move hash-based lookup of parameters out of code, core uses direct addressing by node index and parameter/trigger index. Authoring tool should allow for making "public named" parameters/triggers that can be used by the runtime outside the core, lookup is name (hash) to node + index.
 This makes it easier to keep core down and remove dependencies.
 * Nodes can now be named using the HAccess utility. Setting parameters with only knowing node name and parameter name is now supported without affecting core part.
-
+* Triggers
+  * Triggers need to be queued - can't have just a "trigger x was triggered n times since last render call". Order matters for triggers - start vs stop etc.
+  * We allocate max_trigger_event_count per node that has any triggers.
+  * Queue is array of TTriggerIndex
