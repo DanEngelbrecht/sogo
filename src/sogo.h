@@ -77,7 +77,7 @@ namespace sogo
         AudioInput*             m_AudioInputs;
         AudioOutput*            m_AudioOutputs;
         float*                  m_Parameters;
-        Resource**              m_Resources;
+        Resource*               m_Resources;
         TriggerInput*           m_TriggerInput;
 //        TTriggerOutput*         m_TriggerOutputs;
     };
@@ -86,6 +86,8 @@ namespace sogo
     {
         TContextMemorySize m_ContextMemorySize;
     };
+
+    struct NodeDescription;
 
     typedef void (*GetNodePropertiesCallback)(const GraphRuntimeSettings* graph_runtime_settings, NodeProperties* out_node_properties);
     typedef void (*SetupNodeCallback)(const GraphRuntimeSettings* graph_runtime_settings, const NodeDescription* node_description, void* context_memory);
@@ -144,7 +146,6 @@ namespace sogo
 
     struct GraphDescription
     {
-        const GraphRuntimeSettings* m_GraphRuntimeSettings;
         TNodeIndex                  m_NodeCount;
         const NodeDescription**     m_NodeDescriptions;
         TConnectionIndex            m_ConnectionCount;
@@ -155,8 +156,8 @@ namespace sogo
     struct GraphSize
     {
         TGraphSize m_GraphSize;
-        TTriggerBufferSize m_TriggerBufferSize;
         TScratchBufferSize m_ScratchBufferSize;
+        TTriggerBufferSize m_TriggerBufferSize;
         TContextMemorySize m_ContextMemorySize;
     };
 
@@ -168,12 +169,13 @@ namespace sogo
         void* m_ContextMem;         // No need to align, 
     };
 
-    bool GetGraphSize(const GraphDescription* graph_description, GraphSize* out_graph_size);
-    HGraph CreateGraph(const GraphDescription* graph_description, const GraphBuffers* graph_buffers);
+    bool GetGraphSize(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, GraphSize* out_graph_size);
+    HGraph CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
+    AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value);
     bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index);
-    bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, Resource* resource);
+    bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource);
 
     void RenderGraph(HGraph graph, TFrameIndex frame_count);
     AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);

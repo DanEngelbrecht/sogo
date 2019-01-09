@@ -1,7 +1,7 @@
 #include "sogo_utils.h"
 
 #include "../third-party/containers/src/jc/hashtable.h"
-#include "../third-party/xxHash-1/xxhash.h"
+#include "../third-party/xxhash-1/xxhash.h"
 
 #include <new>
 
@@ -24,14 +24,14 @@ struct TriggerTarget
 typedef jc::HashTable<TParameterNameHash, ParameterTarget> TParameterLookup;
 typedef jc::HashTable<TTriggerNameHash, TriggerTarget> TTriggerLookup;
 
-uint32_t GetParameterLookupSize(uint32_t num_elements)
+static uint32_t GetParameterLookupSize(uint32_t num_elements)
 {
     const uint32_t load_factor    = 100; // percent
     const uint32_t tablesize      = uint32_t(num_elements / (load_factor/100.0f));
     return TParameterLookup::CalcSize(tablesize);
 }
 
-uint32_t GetTriggerLookupSize(uint32_t num_elements)
+static uint32_t GetTriggerLookupSize(uint32_t num_elements)
 {
     const uint32_t load_factor    = 100; // percent
     const uint32_t tablesize      = uint32_t(num_elements / (load_factor/100.0f));
@@ -100,19 +100,19 @@ static bool GetAccessProperties(
     return true;
 }
 
-static size_t GetAccessSize(
-    const AccessDescription* access_description,
+static TAccessSize GetAccessSize(
+    const AccessDescription* ,
     const AccessProperties* access_properties)
 {
-    size_t s = ALIGN_SIZE(sizeof(Access), sizeof(void*)) +
+    TAccessSize s = (TAccessSize)(ALIGN_SIZE(sizeof(Access), sizeof(void*)) +
                 ALIGN_SIZE(GetParameterLookupSize(access_properties->m_NamedParameterCount), sizeof(void*)) +
-                ALIGN_SIZE(GetTriggerLookupSize(access_properties->m_NamedTriggerCount), sizeof(float));
+                ALIGN_SIZE(GetTriggerLookupSize(access_properties->m_NamedTriggerCount), sizeof(float)));
     return s;
 }
 
 bool GetAccessSize(
     const AccessDescription* access_description,
-    size_t& out_access_size)
+    TAccessSize& out_access_size)
 {
     AccessProperties access_properties;
     if (!GetAccessProperties(access_description, &access_properties))
@@ -185,9 +185,6 @@ HAccess CreateAccess(
         access_properties.m_NamedTriggerCount,
         parameter_lookup_data,
         trigger_lookup_data);
-
-    TParameterIndex parameters_offset = 0;
-    TTriggerIndex triggers_offset = 0;
 
     const GraphDescription* graph_description = access_description->m_GraphDescription;
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
