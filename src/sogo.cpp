@@ -60,7 +60,7 @@ static bool GetOutputChannelCount(
         {
             for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
             {
-                const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
+                const NodeAudioConnection* node_connection = &graph_description->m_NodeAudioConnections[i];
                 if (node_connection->m_InputNodeIndex == node_index &&
                     node_connection->m_InputIndex == output_description->m_InputIndex)
                 {
@@ -103,7 +103,7 @@ static bool GetOutputChannelAllocationCount(
         {
             for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
             {
-                const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
+                const NodeAudioConnection* node_connection = &graph_description->m_NodeAudioConnections[i];
                 if (node_connection->m_InputNodeIndex == node_index &&
                     node_connection->m_InputIndex == output_description->m_InputIndex)
                 {
@@ -172,7 +172,7 @@ static bool GetGraphProperties(
 
     for (TConnectionIndex c = 0; c < graph_description->m_ConnectionCount; ++c)
     {
-        const NodeConnection* connection = &graph_description->m_NodeConnections[c];
+        const NodeAudioConnection* connection = &graph_description->m_NodeAudioConnections[c];
         if (connection->m_InputNodeIndex <= connection->m_OutputNodeIndex)
         {
             return false;
@@ -413,7 +413,7 @@ HGraph CreateGraph(
 
     for (TConnectionIndex i = 0; i < graph_description->m_ConnectionCount; ++i)
     {
-        const NodeConnection* node_connection = &graph_description->m_NodeConnections[i];
+        const NodeAudioConnection* node_connection = &graph_description->m_NodeAudioConnections[i];
         if (node_connection->m_OutputNodeIndex == EXTERNAL_NODE_INDEX)
         {
             Node* input_node = &graph->m_Nodes[node_connection->m_InputNodeIndex];

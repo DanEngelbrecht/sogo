@@ -136,7 +136,7 @@ namespace sogo
 
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
 
-    struct NodeConnection
+    struct NodeAudioConnection
     {
         TNodeIndex          m_OutputNodeIndex;
         TAudioOutputIndex   m_OutputIndex;
@@ -149,7 +149,7 @@ namespace sogo
         TNodeIndex                  m_NodeCount;
         const NodeDescription**     m_NodeDescriptions;
         TConnectionIndex            m_ConnectionCount;
-        const NodeConnection*       m_NodeConnections;
+        const NodeAudioConnection*  m_NodeAudioConnections;
         AudioOutput**               m_ExternalAudioInputs;
     };
 
