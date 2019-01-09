@@ -34,7 +34,7 @@ static void RenderSplit(HGraph graph, HNode node, const RenderParameters* render
     input_data->m_Buffer = 0x0;
 }
 
-struct AudioOutputDescription SplitNodeAudioOutputDescriptions[SPLIT_OUTPUT_COUNT] =
+static struct AudioOutputDescription SplitNodeAudioOutputDescriptions[SPLIT_OUTPUT_COUNT] =
 {
     {AudioOutputDescription::PASS_THROUGH, {0}},
     {AudioOutputDescription::AS_INPUT, {0}}
@@ -132,7 +132,7 @@ static void RenderMerge(HGraph , HNode , const RenderParameters* render_paramete
     render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer = 0x0;
 }
 
-struct AudioOutputDescription MergeNodeAudioOutputDescriptions[SOGO_MERGE_OUTPUT_COUNT] =
+static struct AudioOutputDescription MergeNodeAudioOutputDescriptions[SOGO_MERGE_OUTPUT_COUNT] =
 {
     {AudioOutputDescription::PASS_THROUGH, {0}}
 };
@@ -234,9 +234,10 @@ static bool RenderGain(TFrameIndex frame_count, AudioOutput* output_data, float 
 {
     static const float max_gain_step_per_frame = 1.0f / 32;
 
-    if (gain == filtered_gain)
+    if (fabs(gain - filtered_gain) < 0.001f)
     {
-        if (gain < 0.001f)
+        filtered_gain = gain;
+        if (filtered_gain < 0.001f)
         {
             output_data->m_Buffer = 0x0;
             return true;
@@ -288,7 +289,7 @@ static const ParameterDescription GainParameters[SOGO_GAIN_PARAMETER_COUNT] = {
     {0x0, 1.f}
 };
 
-struct AudioOutputDescription GainNodeAudioOutputDescriptions[SOGO_GAIN_OUTPUT_COUNT] =
+static struct AudioOutputDescription GainNodeAudioOutputDescriptions[SOGO_GAIN_OUTPUT_COUNT] =
 {
     {AudioOutputDescription::PASS_THROUGH, {0}}
 };
@@ -381,7 +382,7 @@ static const TriggerDescription SineTriggers[SOGO_SINE_TRIGGER_COUNT] = {
     {"Stop"}
 };
 
-struct AudioOutputDescription SineNodeAudioOutputDescriptions[SOGO_SINE_OUTPUT_COUNT] =
+static struct AudioOutputDescription SineNodeAudioOutputDescriptions[SOGO_SINE_OUTPUT_COUNT] =
 {
     {AudioOutputDescription::FIXED, {1}}
 };
@@ -470,7 +471,7 @@ static void RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     }
 }
 
-struct AudioOutputDescription ToStereoNodeAudioOutputDescriptions[SOGO_TOSTEREO_OUTPUT_COUNT] =
+static struct AudioOutputDescription ToStereoNodeAudioOutputDescriptions[SOGO_TOSTEREO_OUTPUT_COUNT] =
 {
     {AudioOutputDescription::FIXED, {2}}
 };
@@ -536,7 +537,7 @@ static const ParameterDescription DCParameters[SOGO_DC_PARAMETER_COUNT] = {
     {"Level", 1.0f}
 };
 
-struct AudioOutputDescription DCNodeAudioOutputDescriptions[SOGO_DC_OUTPUT_COUNT] =
+static struct AudioOutputDescription DCNodeAudioOutputDescriptions[SOGO_DC_OUTPUT_COUNT] =
 {
     {AudioOutputDescription::FIXED, {1}}
 };
@@ -555,8 +556,5 @@ const NodeDescription DCNodeDescription =
     SOGO_DC_PARAMETER_COUNT,
     SOGO_DC_TRIGGER_COUNT
 };
-
-
-
 
 }
