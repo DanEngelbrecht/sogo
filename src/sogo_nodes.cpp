@@ -9,7 +9,7 @@ static const TAudioInputIndex SPLIT_INPUT_COUNT = 1;
 static const TAudioOutputIndex SPLIT_OUTPUT_COUNT = 2;
 static const TResourceIndex SPLIT_RESOURCE_COUNT = 0;
 static const TParameterIndex SPLIT_PARAMETER_COUNT = 0;
-static const TTriggerIndex SPLIT_TRIGGER_COUNT = 0;
+static const TTriggerInputIndex SPLIT_INPUT_TRIGGER_COUNT = 0;
 
 static void RenderSplit(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
@@ -52,7 +52,8 @@ const NodeDescription SplitNodeDescription =
     SPLIT_OUTPUT_COUNT,
     SPLIT_RESOURCE_COUNT,
     SPLIT_PARAMETER_COUNT,
-    SPLIT_TRIGGER_COUNT
+    SPLIT_INPUT_TRIGGER_COUNT,
+    SPLIT_OUPUT_TRIGGER_COUNT
 };
 
 
@@ -68,9 +69,14 @@ enum SOGO_MERGE_RESOURCES
     SOGO_MERGE_RESOURCE_COUNT
 };
 
-enum SOGO_MERGE_TRIGGERS
+enum SOGO_MERGE_INPUT_TRIGGERS
 {
-    SOGO_MERGE_TRIGGER_COUNT
+    SOGO_MERGE_INPUT_TRIGGER_COUNT
+};
+
+enum SOGO_MERGE_OUTPUT_TRIGGERS
+{
+    SOGO_MERGE_OUTPUT_TRIGGER_COUNT
 };
 
 enum SOGO_MERGE_INPUTS

@@ -8,23 +8,24 @@ namespace sogo
     // Count is how many of a something - number of triggers queued, number of frames to render
     // Offset is how far into a global array something is - offset to first audio input of a node in the graphs audio input array
 
-    typedef uint16_t TNodeIndex;
-    typedef uint8_t TParameterIndex;
-    typedef uint8_t  TTriggerIndex;
-    typedef uint16_t TTriggerCount;
-    typedef uint8_t TResourceIndex;
-    typedef uint8_t TAudioInputIndex;
-    typedef uint8_t TAudioOutputIndex;
-    typedef uint8_t TChannelIndex;
-    typedef uint8_t TConnectionIndex;
-    typedef uint32_t TFrameIndex;
-    typedef uint32_t TSampleIndex;
-    typedef uint32_t TFrameRate;
-    typedef uint32_t TContextMemorySize;
-    typedef uint32_t TGraphSize;
-    typedef uint32_t TTriggerBufferSize;
-    typedef uint32_t TScratchBufferSize;
-    typedef uint32_t TContextMemorySize;
+    typedef uint16_t    TNodeIndex;
+    typedef uint8_t     TParameterIndex;
+    typedef uint8_t     TTriggerInputIndex;
+    typedef uint8_t     TTriggerOutputIndex;
+    typedef uint16_t    TTriggerCount;
+    typedef uint8_t     TResourceIndex;
+    typedef uint8_t     TAudioInputIndex;
+    typedef uint8_t     TAudioOutputIndex;
+    typedef uint8_t     TChannelIndex;
+    typedef uint8_t     TConnectionIndex;
+    typedef uint32_t    TFrameIndex;
+    typedef uint32_t    TSampleIndex;
+    typedef uint32_t    TFrameRate;
+    typedef uint32_t    TContextMemorySize;
+    typedef uint32_t    TGraphSize;
+    typedef uint32_t    TTriggerBufferSize;
+    typedef uint32_t    TScratchBufferSize;
+    typedef uint32_t    TContextMemorySize;
 
     struct AudioOutput
     {
@@ -39,15 +40,15 @@ namespace sogo
 
     struct TriggerInput
     {
-        TTriggerIndex*  m_Buffer;
-        TTriggerCount   m_Count;
+        TTriggerInputIndex* m_Buffer;
+        TTriggerCount       m_Count;
     };
 
-//    struct TriggerOutput
-//    {
-//        TriggerInput* m_TriggerInput;
-//        TTriggerIndex m_TriggerIndex;
-//    };
+    struct TriggerOutput
+    {
+        TNodeIndex          m_Node;
+        TTriggerInputIndex  m_Trigger;
+    };
 
     struct Resource
     {
@@ -79,7 +80,7 @@ namespace sogo
         float*                  m_Parameters;
         Resource*               m_Resources;
         TriggerInput*           m_TriggerInput;
-//        TTriggerOutput*         m_TriggerOutputs;
+        TriggerOutput*          m_TriggerOutputs;
     };
 
     struct NodeProperties
@@ -131,7 +132,8 @@ namespace sogo
         TAudioOutputIndex               m_AudioOutputCount;
         TResourceIndex                  m_ResourceCount;
         TParameterIndex                 m_ParameterCount;
-        TTriggerIndex                   m_TriggerCount;
+        TTriggerInputIndex              m_TriggerInputCount;
+        TTriggerOutputIndex             m_TriggerOutputCount;
     };
 
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
@@ -144,13 +146,23 @@ namespace sogo
         TAudioInputIndex    m_InputIndex;
     };
 
+    struct NodeTriggerConnection
+    {
+        TNodeIndex          m_OutputNodeIndex;
+        TTriggerOutputIndex m_OutputTriggerIndex;
+        TNodeIndex          m_InputNodeIndex;
+        TTriggerInputIndex  m_InputTriggerIndex;
+    };
+
     struct GraphDescription
     {
-        TNodeIndex                  m_NodeCount;
-        const NodeDescription**     m_NodeDescriptions;
-        TConnectionIndex            m_ConnectionCount;
-        const NodeAudioConnection*  m_NodeAudioConnections;
-        AudioOutput**               m_ExternalAudioInputs;
+        TNodeIndex                      m_NodeCount;
+        const NodeDescription**         m_NodeDescriptions;
+        TConnectionIndex                m_AudioConnectionCount;
+        const NodeAudioConnection*      m_NodeAudioConnections;
+        AudioOutput**                   m_ExternalAudioInputs;
+        TConnectionIndex                m_TriggerConnectionCount;
+        const NodeTriggerConnection*    m_NodeTriggerConnections;
     };
 
     struct GraphSize
@@ -174,7 +186,7 @@ namespace sogo
     AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value);
-    bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerIndex trigger_index);
+    bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerInputIndex trigger_index);
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource);
 
     void RenderGraph(HGraph graph, TFrameIndex frame_count);
