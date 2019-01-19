@@ -9,4 +9,5 @@ namespace sogo {
     extern const NodeDescription SineNodeDescription;
     extern const NodeDescription ToStereoNodeDescription;
     extern const NodeDescription DCNodeDescription;
+    extern const NodeDescription SequentialTriggerDescription;
 }
