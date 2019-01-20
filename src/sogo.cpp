@@ -307,7 +307,6 @@ AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioOutputInd
 
 static void MakeNode(
     HGraph graph,
-    const GraphDescription* graph_description,
     const GraphRuntimeSettings* graph_runtime_settings,
     const NodeDescription* node_description,
     TNodeIndex* node_offset,
@@ -421,7 +420,7 @@ HGraph CreateGraph(
     TContextMemorySize context_memory_offset = 0;
     for (TNodeIndex i = 0; i < graph_description->m_NodeCount; ++i)
     {
-        MakeNode(graph, graph_description, graph_runtime_settings, graph_description->m_NodeDescriptions[i], &node_offset, &input_offset, &output_offset, &parameters_offset, &resources_offset, &triggers_input_offset, &triggers_output_offset, &context_memory_offset);
+        MakeNode(graph, graph_runtime_settings, graph_description->m_NodeDescriptions[i], &node_offset, &input_offset, &output_offset, &parameters_offset, &resources_offset, &triggers_input_offset, &triggers_output_offset, &context_memory_offset);
     }
 
     for (TConnectionIndex i = 0; i < graph_description->m_AudioConnectionCount; ++i)
