@@ -187,6 +187,7 @@ static void sogo_simple_graph(SCtx* )
 
         ASSERT_TRUE(render_output->m_Buffer != 0x0);
     }
+    free(access_mem);
     free(mem);
 }
 
