@@ -29,36 +29,47 @@ static void test_teardown(SCtx* )
 
 static void sogo_create(SCtx* )
 {
+    static const sogo::TFrameRate FRAME_RATE = 44100;
+    static const sogo::TFrameIndex MAX_BATCH_SIZE = 128;
+    static const sogo::TFrameIndex BATCH_SIZE = 64;
+    static const sogo::TTriggerCount MAX_TRIGGER_EVENT_COUNT = 32;
+    sogo::GraphRuntimeSettings GRAPH_RUNTIME_SETTINGS =
+    {
+        FRAME_RATE,
+        MAX_BATCH_SIZE,
+        MAX_TRIGGER_EVENT_COUNT
+    };
     sogo::GraphDescription GRAPH_DESCRIPTION =
     {
         0,
         0x0,
         0,
         0x0,
+        0x0,
+        0,
         0x0
     };
 
-    static const uint32_t MAX_BATCH_SIZE = 128;
-    size_t graph_size = 0;
-    sogo::TSampleIndex out_scratch_buffer_sample_count;
-    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size, out_scratch_buffer_sample_count));
-    graph_size = ALIGN_SIZE(graph_size, sizeof(float));
-    size_t audio_buffer_size = out_scratch_buffer_sample_count * sizeof(float);
-    void* graph_mem = malloc(graph_size + audio_buffer_size);
-    ASSERT_NE(0x0, graph_mem);
+    sogo::GraphSize graph_size;
+    ASSERT_TRUE(sogo::GetGraphSize(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_size));
 
-    float* audio_buffer_mem = (float*)&((uint8_t*)graph_mem)[graph_size];
+    size_t s = ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) +
+               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) +
+               ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1) +
+               ALIGN_SIZE(graph_size.m_ContextMemorySize, 1);
+    uint8_t* mem = (uint8_t*)malloc(s);
+    ASSERT_NE(0x0, mem);
+    sogo::GraphBuffers graph_buffers;
+    graph_buffers.m_GraphMem = mem;
+    graph_buffers.m_ScratchBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float))];
+    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex))];
+    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
 
-    sogo::HGraph graph = sogo::CreateGraph(
-        graph_mem,
-        audio_buffer_mem,
-        44100,
-        MAX_BATCH_SIZE,
-        &GRAPH_DESCRIPTION);
+    sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
     TEST_ASSERT_NE(0x0, graph);
 
-    TEST_ASSERT_TRUE(RenderGraph(graph, 64));
-    free(graph_mem);
+    RenderGraph(graph, BATCH_SIZE);
+    free(mem);
 }
 
 static void sogo_simple_graph(SCtx* )
@@ -74,6 +85,16 @@ static void sogo_simple_graph(SCtx* )
         &sogo::MergeNodeDescription         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
     };
 
+    static const sogo::TFrameRate FRAME_RATE = 44100;
+    static const sogo::TFrameIndex MAX_BATCH_SIZE = 128;
+    static const sogo::TTriggerCount MAX_TRIGGER_EVENT_COUNT = 32;
+    sogo::GraphRuntimeSettings GRAPH_RUNTIME_SETTINGS =
+    {
+        FRAME_RATE,
+        MAX_BATCH_SIZE,
+        MAX_TRIGGER_EVENT_COUNT
+    };
+
     const char* NODE_NAMES[NODE_COUNT] =
     {
         "DC",
@@ -85,7 +106,7 @@ static void sogo_simple_graph(SCtx* )
     };
 
     static const uint16_t CONNECTION_COUNT = 6;
-    sogo::NodeConnection CONNECTIONS[CONNECTION_COUNT] =
+    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT] =
     {
         { 0, 0, 1, 0 },
         { 1, 0, 2, 0 },
@@ -101,40 +122,38 @@ static void sogo_simple_graph(SCtx* )
         NODES,
         CONNECTION_COUNT,
         CONNECTIONS,
+        0x0,
+        0,
         0x0
     };
 
-    static const uint32_t MAX_BATCH_SIZE = 128;
+    sogo::GraphSize graph_size;
+    ASSERT_TRUE(sogo::GetGraphSize(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_size));
 
-    size_t graph_size = 0;
-    sogo::TSampleIndex out_scratch_buffer_sample_count;
-    ASSERT_TRUE(sogo::GetGraphSize(MAX_BATCH_SIZE, &GRAPH_DESCRIPTION, graph_size, out_scratch_buffer_sample_count));
-    graph_size = ALIGN_SIZE(graph_size, sizeof(void*));
+    size_t s = ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) +
+               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) +
+               ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1) +
+               ALIGN_SIZE(graph_size.m_ContextMemorySize, 1);
+    uint8_t* mem = (uint8_t*)malloc(s);
+    ASSERT_NE(0x0, mem);
+    sogo::GraphBuffers graph_buffers;
+    graph_buffers.m_GraphMem = mem;
+    graph_buffers.m_ScratchBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float))];
+    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex))];
+    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
 
-    size_t access_size = 0;
+    sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
+    TEST_ASSERT_NE(0x0, graph);
+
     struct sogo::AccessDescription ACCESS_DESCRIPTION =
     {
         &GRAPH_DESCRIPTION,
         NODE_NAMES
     };
 
-    ASSERT_TRUE(sogo::GetAccessSize(&ACCESS_DESCRIPTION, &access_size));
-    access_size = ALIGN_SIZE(access_size, sizeof(float));
-    size_t audio_buffer_size = out_scratch_buffer_sample_count * sizeof(float);
-
-    void* mem = malloc(graph_size + access_size + audio_buffer_size);
-    ASSERT_NE(0x0, mem);
-
-    void* graph_mem = mem;
-    void* access_mem = (void*)&((uint8_t*)mem)[graph_size];
-    float* audio_buffer_mem = (float*)&((uint8_t*)access_mem)[access_size];
-    sogo::HGraph graph = sogo::CreateGraph(
-        graph_mem,
-        audio_buffer_mem,
-        44100,
-        MAX_BATCH_SIZE,
-        &GRAPH_DESCRIPTION);
-    ASSERT_NE(0x0, graph);
+    sogo::TAccessSize access_size = 0;
+    ASSERT_TRUE(sogo::GetAccessSize(&ACCESS_DESCRIPTION, access_size));
+    void* access_mem = malloc(access_size);
 
     sogo::HAccess access = sogo::CreateAccess(access_mem, &ACCESS_DESCRIPTION);
     ASSERT_NE(0x0, access);
@@ -150,7 +169,7 @@ static void sogo_simple_graph(SCtx* )
 
     for (uint32_t i = 0; i < 6; ++i)
     {
-        ASSERT_TRUE(sogo::RenderGraph(graph, MAX_BATCH_SIZE));
+        sogo::RenderGraph(graph, MAX_BATCH_SIZE);
         sogo::AudioOutput* render_output = sogo::GetAudioOutput(graph, 5, 0);
 
         ASSERT_TRUE(render_output != 0x0);
@@ -183,7 +202,7 @@ static void sogo_merge_graphs(SCtx* )
     };
 
     static const sogo::TConnectionIndex CONNECTION_COUNT_GENERATOR = 1;
-    sogo::NodeConnection CONNECTIONS_GENERATOR[CONNECTION_COUNT_GENERATOR] =
+    sogo::NodeAudioConnection CONNECTIONS_GENERATOR[CONNECTION_COUNT_GENERATOR] =
     {
         { 0, 0, 1, 0 }
     };
@@ -194,6 +213,8 @@ static void sogo_merge_graphs(SCtx* )
         NODES_GENERATOR,
         CONNECTION_COUNT_GENERATOR,
         CONNECTIONS_GENERATOR,
+        0x0,
+        0,
         0x0
     };
 
@@ -206,7 +227,7 @@ static void sogo_merge_graphs(SCtx* )
     };
 
     static const sogo::TConnectionIndex CONNECTION_COUNT_MIXER = 1;
-    sogo::NodeConnection CONNECTIONS_MIXER[CONNECTION_COUNT_MIXER] =
+    sogo::NodeAudioConnection CONNECTIONS_MIXER[CONNECTION_COUNT_MIXER] =
     {
         { 0, 0, 1, 0 }
     };
@@ -217,6 +238,8 @@ static void sogo_merge_graphs(SCtx* )
         NODES_MIXER,
         CONNECTION_COUNT_MIXER,
         CONNECTIONS_MIXER,
+        0x0,
+        0,
         0x0
     };
 
@@ -225,7 +248,7 @@ static void sogo_merge_graphs(SCtx* )
     static const sogo::TNodeIndex NODE_COUNT = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + NODE_COUNT_MIXER;
     const sogo::NodeDescription* NODES[NODE_COUNT];
     static const sogo::TConnectionIndex CONNECTION_COUNT = CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1 + 1;
-    sogo::NodeConnection CONNECTIONS[CONNECTION_COUNT];
+    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT];
 
     // Merge the three graphs
     sogo::TNodeIndex node_index = 0;
@@ -318,6 +341,8 @@ static void sogo_merge_graphs(SCtx* )
         NODES,
         connection_index,
         CONNECTIONS,
+        0x0,
+        0,
         0x0
     };
 
@@ -327,19 +352,19 @@ static void sogo_merge_graphs(SCtx* )
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[2], &sogo::MergeNodeDescription);
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[3], &sogo::GainNodeDescription);
 
-    ASSERT_EQ(CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1, GRAPH_DESCRIPTION.m_ConnectionCount);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[0].m_InputNodeIndex, 1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[0].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[0].m_OutputNodeIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[0].m_OutputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[1].m_InputNodeIndex, 3);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[1].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[1].m_OutputNodeIndex, 2);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[1].m_OutputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[2].m_InputNodeIndex, 2);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[2].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[2].m_OutputNodeIndex, 1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeConnections[2].m_OutputIndex, 0);
+    ASSERT_EQ(CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1, GRAPH_DESCRIPTION.m_AudioConnectionCount);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_InputNodeIndex, 1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_OutputNodeIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_InputNodeIndex, 3);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_OutputNodeIndex, 2);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_InputNodeIndex, 2);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputNodeIndex, 1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputIndex, 0);
 }
 
 TEST_BEGIN(sogo_test, sogo_main_setup, sogo_main_teardown, test_setup, test_teardown)
