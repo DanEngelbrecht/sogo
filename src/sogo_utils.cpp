@@ -221,7 +221,7 @@ HAccess CreateAccess(
     return access;
 }
 
-bool SetParameter(HAccess access, HGraph graph, TParameterNameHash parameter_hash, float value)
+bool SetParameter(HAccess access, HGraph graph, TParameterNameHash parameter_hash, TParameter value)
 {
     ParameterTarget* target = access->m_ParameterLookup.Get(parameter_hash);
     if (target == 0x0)

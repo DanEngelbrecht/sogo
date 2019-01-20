@@ -27,7 +27,7 @@ struct Node
 };
 
 struct Graph {
-    float* m_Parameters;
+    TParameter* m_Parameters;
     Resource* m_Resources;
     TTriggerCount m_MaxTriggerEventCount;
     TTriggerInputIndex* m_Triggers;
@@ -200,7 +200,7 @@ static TGraphSize GetGraphSize(
     const GraphProperties* graph_properties)
 {
     TGraphSize s = ALIGN_SIZE(sizeof(Graph), sizeof(void*)) +
-        ALIGN_SIZE(sizeof(float) * graph_properties->m_ParameterCount, sizeof(Resource*)) +
+        ALIGN_SIZE(sizeof(TParameter) * graph_properties->m_ParameterCount, sizeof(Resource*)) +
         ALIGN_SIZE(sizeof(Resource) * graph_properties->m_ResourceCount, sizeof(RenderNodeCallback)) +
         ALIGN_SIZE(sizeof(Node) * graph_description->m_NodeCount, sizeof(float*)) +
         ALIGN_SIZE(sizeof(AudioOutput) * (graph_properties->m_AudioOutputCount + 1), sizeof(AudioOutput*)) +
@@ -270,7 +270,7 @@ void RenderGraph(HGraph graph, TFrameIndex frame_count)
     }
 }
 
-bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value)
+bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value)
 {
     if (node_index >= graph->m_NodeCount)
     {
@@ -389,8 +389,8 @@ HGraph CreateGraph(
     uint8_t* ptr = (uint8_t*)graph_buffers->m_GraphMem;
     uint32_t offset = ALIGN_SIZE(sizeof(Graph), sizeof(void*));
 
-    graph->m_Parameters = (float*)&ptr[offset];
-    offset += ALIGN_SIZE(sizeof(float) * graph_properties.m_ParameterCount, sizeof(void*));
+    graph->m_Parameters = (TParameter*)&ptr[offset];
+    offset += ALIGN_SIZE(sizeof(TParameter) * graph_properties.m_ParameterCount, sizeof(void*));
 
     graph->m_Resources = (Resource*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(Resource) * graph_properties.m_ResourceCount, sizeof(RenderNodeCallback));

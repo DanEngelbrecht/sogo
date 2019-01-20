@@ -159,13 +159,13 @@ static void sogo_simple_graph(SCtx* )
     ASSERT_NE(0x0, access);
 
     sogo::TParameterNameHash level_parameter_hash = sogo::MakeParameterHash(sogo::MakeNodeNameHash(NODE_NAMES[0]), "Level");
-    ASSERT_TRUE(sogo::SetParameter(access, graph, level_parameter_hash, 0.5f));
+    ASSERT_TRUE(sogo::SetParameter(access, graph, level_parameter_hash, sogo::TParameter {0.5f}));
 
     sogo::TParameterNameHash gain_parameter_hash = sogo::MakeParameterHash(sogo::MakeNodeNameHash(NODE_NAMES[1]), "Gain");
-    ASSERT_TRUE(sogo::SetParameter(access, graph, gain_parameter_hash, 0.5f));
+    ASSERT_TRUE(sogo::SetParameter(access, graph, gain_parameter_hash, sogo::TParameter {0.5f}));
 
     sogo::TParameterNameHash gain2_parameter_hash = sogo::MakeParameterHash(sogo::MakeNodeNameHash(NODE_NAMES[4]), "Gain");
-    ASSERT_TRUE(sogo::SetParameter(access, graph, gain2_parameter_hash, 2.f));
+    ASSERT_TRUE(sogo::SetParameter(access, graph, gain2_parameter_hash, sogo::TParameter {2.f}));
 
     for (uint32_t i = 0; i < 6; ++i)
     {
