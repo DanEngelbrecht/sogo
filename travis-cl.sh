@@ -2,9 +2,9 @@
 
 set +e
 
-"C:\Program Files (x86)\Microsoft Visual Studio 17.0\VC\vcvarsall.bat" amd64
+echo "%ProgramFiles(x86)%\Microsoft Visual Studio 17.0\VC\vcvarsall.bat" amd64
 
-./compile_cl_debug.bat
+./compile_clang_debug.sh
 ./build/test_debug.exe
-./compile_cl.bat
+./compile_clang.sh
 ./build/test.exe
