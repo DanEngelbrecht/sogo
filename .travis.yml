@@ -6,10 +6,9 @@ compiler:
 os:
   - linux
   - osx
+  - windows
 
 script:
-  - ./compile_clang_debug.sh
-  - ./build/test_debug
-  - ./compile_clang.sh
-  - ./build/test
-  
+  - if ["$TRAVIS_OS_NAME" == "osx"]; then ./travis-clang.sh; fi
+  - if ["$TRAVIS_OS_NAME" == "linux"]; then ./travis-clang.sh; fi
+  - if ["$TRAVIS_OS_NAME" == "windows"]; then ./travis-cl.sh; fi
