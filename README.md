@@ -37,7 +37,7 @@ Building is just the tests right now, no actual application.
 * Execute 'compile_cl.bat' or 'compile_cl_debug.bat' of optimized vs un-optimized build respectively
 * Output is in 'build' folder
 
-### Linux/MacOS (clang) CURRENTLY BROKEN/INCOMPLETE/UNTESTED
+### Linux/MacOS (clang)
 
 * Execute 'compile_clang.bat' or 'compile_clang_debug.bat' of optimized vs un-optimized build respectively
 * Output is in 'build' folder
@@ -49,7 +49,6 @@ Building is just the tests right now, no actual application.
   * A node can trigger another node using the Trigger(graph, node_index, trigger_index).
   * Need trigger input and output and connections - rename NodeConnection to AudioConnection?
 * Should a node be able to alter parameters of another node? Doubtful...
-* How to facilitate node specific buffer allocations for things like delay/reverb? Can be frame rate dependant
 * FrameRate is now set at Graph construction, not sure this is a good design choice
 * Authoring tools - considering DearImGUI for this, but haven't decided yet
 * Tons of node types - OGG, WAVE, Pan, Random/Sequential triggers, Mixing, Effects etc
@@ -57,6 +56,8 @@ Building is just the tests right now, no actual application.
 * Much more that I forgot to list...
 
 ## DONE
+* How to facilitate node specific buffer allocations for things like delay/reverb? Can be frame rate dependant
+  * GetNodePropertiesCallback - specify how much memory is needed based on max frame count per batch and frame rate
 * Move hash-based lookup of parameters out of code, core uses direct addressing by node index and parameter/trigger index. Authoring tool should allow for making "public named" parameters/triggers that can be used by the runtime outside the core, lookup is name (hash) to node + index.
 This makes it easier to keep core down and remove dependencies.
 * Nodes can now be named using the HAccess utility. Setting parameters with only knowing node name and parameter name is now supported without affecting core part.
