@@ -1,3 +1,7 @@
+|Branch      | OSX / Linux |
+|------------|-------------|
+|master      | [![Build Status](https://travis-ci.org/DanEngelbrecht/sogo.svg?branch=master)](https://travis-ci.org/DanEngelbrecht/sogo?branch=master) |
+
 # sogo
 Lightweight sound graph framework
 
