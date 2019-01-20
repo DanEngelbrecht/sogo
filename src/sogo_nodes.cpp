@@ -589,4 +589,44 @@ const NodeDescription DCNodeDescription =
     SOGO_DC_OUTPUT_TRIGGER_COUNT
 };
 
+enum SOGO_SEQUENTIAL_TRIGGER_OUTPUT_TRIGGERS
+{
+    SOGO_SEQUENTIAL_TRIGGER_TRIGGER_OUT,
+    SOGO_SEQUENTIAL_TRIGGER_TRIGGER_OUTUT_COUNT
+};
+
+static void RenderSequentialTrigger(HGraph graph, HNode , const RenderParameters* render_parameters)
+{
+    // TODO
+    bool trigger = false;   // Some logic to not trigger all the time
+    if (trigger)
+    {
+        TriggerOutput* out = &render_parameters->m_TriggerOutputs[SOGO_SEQUENTIAL_TRIGGER_TRIGGER_OUT];
+        Trigger(graph, out->m_Node, out->m_Trigger);
+    }
+}
+
+static struct TriggerDescription SequentialTriggerTriggerDescriptions[SOGO_SEQUENTIAL_TRIGGER_TRIGGER_OUTUT_COUNT] =
+{
+    "Out"
+};
+
+const NodeDescription SequentialTriggerDescription =
+{
+    0x0,
+    0x0,
+    RenderSequentialTrigger,
+    0x0,
+    0x0,
+    SequentialTriggerTriggerDescriptions,
+    0,
+    0,
+    0,
+    0,
+    0,
+    SOGO_SEQUENTIAL_TRIGGER_TRIGGER_OUTUT_COUNT
+};
+
+
+
 }
