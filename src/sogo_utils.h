@@ -8,6 +8,7 @@ namespace sogo {
     typedef uint32_t TNodeNameHash;
     typedef uint32_t TParameterNameHash;
     typedef uint32_t TTriggerNameHash;
+    typedef uint32_t TAccessSize;
 
     struct AccessDescription
     {
@@ -15,7 +16,7 @@ namespace sogo {
         const char** m_NodeNames;
     };
 
-    bool GetAccessSize(const AccessDescription* access_description, size_t& out_access_size);
+    bool GetAccessSize(const AccessDescription* access_description, TAccessSize& out_access_size);
     HAccess CreateAccess(void* mem, const AccessDescription* access_description);
 
     TNodeNameHash MakeNodeNameHash(const char* node_name);
