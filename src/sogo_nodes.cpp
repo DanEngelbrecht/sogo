@@ -273,8 +273,8 @@ static bool RenderGain(TFrameIndex frame_count, AudioOutput* output_data, float 
 static void RenderGain(HGraph , HNode , const RenderParameters* render_parameters)
 {
     AudioOutput* input_data = render_parameters->m_AudioInputs[SOGO_GAIN_INPUT].m_AudioOutput;
-    float gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_GAIN_INDEX];
-    float filtered_gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX];
+    float gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_GAIN_INDEX].m_Float;
+    float filtered_gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX].m_Float;
     if (input_data->m_Buffer == 0x0)
     {
         // TODO: Hmm, we still want to filter the gain, or can we just hack it and set filtered_gain to gain?
@@ -294,7 +294,7 @@ static void RenderGain(HGraph , HNode , const RenderParameters* render_parameter
         render_parameters->m_AudioOutputs[0].m_Buffer = 0x0;
         return;
     }
-    render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX] = filtered_gain;
+    render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX].m_Float = filtered_gain;
 }
 
 static const ParameterDescription GainParameters[SOGO_GAIN_PARAMETER_COUNT] = {
@@ -367,9 +367,9 @@ enum SOGO_SINE_OUTPUTS
 
 static void RenderSine(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
-    float frequency = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FREQUENCY_INDEX];
-    float filtered_frequency = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_FREQUENCY_INDEX];
-    float value = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX];
+    float frequency = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FREQUENCY_INDEX].m_Float;
+    float filtered_frequency = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_FREQUENCY_INDEX].m_Float;
+    float value = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX].m_Float;
 
     filtered_frequency = ((frequency * 15) + filtered_frequency) / 16;
     float step = ((2.f * 3.141592654f) * filtered_frequency) / render_parameters->m_FrameRate;
@@ -386,8 +386,8 @@ static void RenderSine(HGraph graph, HNode node, const RenderParameters* render_
             value -= (2.f * 3.141592654f);
         }
     }
-    render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_FREQUENCY_INDEX] = filtered_frequency;
-    render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX] = value;
+    render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_FREQUENCY_INDEX].m_Float = filtered_frequency;
+    render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX].m_Float = value;
 }
 
 static const ParameterDescription SineParameters[SOGO_SINE_PARAMETER_COUNT] = {
@@ -553,7 +553,7 @@ enum SOGO_DC_OUTPUTS
 
 static void RenderDC(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
-    float level = render_parameters->m_Parameters[SOGO_DC_PARAMETER_LEVEL_INDEX];
+    float level = render_parameters->m_Parameters[SOGO_DC_PARAMETER_LEVEL_INDEX].m_Float;
 
     uint32_t frame_count = render_parameters->m_FrameCount;
     render_parameters->m_AudioOutputs[0].m_Buffer = render_parameters->m_AllocateAudioBuffer(graph, node, 1, frame_count);

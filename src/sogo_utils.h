@@ -22,7 +22,7 @@ namespace sogo {
     TNodeNameHash MakeNodeNameHash(const char* node_name);
 
     TParameterNameHash MakeParameterHash(TNodeNameHash node_name_hash, const char* parameter_name);
-    bool SetParameter(HAccess access, HGraph graph, TParameterNameHash parameter_hash, float value);
+    bool SetParameter(HAccess access, HGraph graph, TParameterNameHash parameter_hash, TParameter value);
 
     TTriggerNameHash MakeTriggerHash(TNodeNameHash node_name_hash, const char* trigger_name);
     bool Trigger(HAccess access, HGraph graph, TTriggerNameHash trigger_hash);

@@ -69,6 +69,12 @@ namespace sogo
         TTriggerCount m_MaxTriggerEventCount;
     };
 
+    union TParameter
+    {
+        float m_Float;
+        int32_t m_Int;
+    };
+
     struct RenderParameters
     {
         void*                   m_ContextMemory;
@@ -77,7 +83,7 @@ namespace sogo
         TFrameIndex             m_FrameCount;
         AudioInput*             m_AudioInputs;
         AudioOutput*            m_AudioOutputs;
-        float*                  m_Parameters;
+        TParameter*             m_Parameters;
         Resource*               m_Resources;
         TriggerInput*           m_TriggerInput;
         TriggerOutput*          m_TriggerOutputs;
@@ -97,7 +103,7 @@ namespace sogo
     struct ParameterDescription
     {
         const char*     m_ParameterName;
-        float           m_InitialValue;
+        TParameter      m_InitialValue;
     };
 
     struct TriggerDescription
@@ -185,7 +191,7 @@ namespace sogo
     HGraph CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
     AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
 
-    bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, float value);
+    bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value);
     bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerInputIndex trigger_index);
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource);
 
