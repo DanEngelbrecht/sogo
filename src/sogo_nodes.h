@@ -3,11 +3,11 @@
 #include "sogo.h"
 
 namespace sogo {
-    extern const NodeDescription SplitNodeDescription;
-    extern const NodeDescription MergeNodeDescription;
-    extern const NodeDescription GainNodeDescription;
-    extern const NodeDescription SineNodeDescription;
-    extern const NodeDescription ToStereoNodeDescription;
-    extern const NodeDescription DCNodeDescription;
-    extern const NodeDescription SequentialTriggerDescription;
+    extern void SplitNodeDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+    extern void MergeNodeDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+    extern void GainNodeDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+    extern void SineNodeDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+    extern void ToStereoNodeDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+    extern void DCNodeDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+    extern void SequentialTriggerDesc(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
 }

@@ -13,6 +13,7 @@ namespace sogo {
     struct AccessDescription
     {
         const GraphDescription* m_GraphDescription;
+        const GraphRuntimeSettings* m_GraphRuntimeSettings;
         const char** m_NodeNames;
     };
 
