@@ -61,7 +61,6 @@ namespace sogo
 
     typedef float* (*AllocateAudioBufferFunc)(HGraph graph, HNode node, TChannelIndex channel_count, TFrameIndex frame_count);
 
-    // TODO: Need to sort out naming - description vs properties!
     struct GraphRuntimeSettings
     {
         TFrameRate m_FrameRate;
@@ -89,17 +88,6 @@ namespace sogo
         TriggerOutput*          m_TriggerOutputs;
     };
 
-    struct NodeProperties
-    {
-        TContextMemorySize m_ContextMemorySize;
-    };
-
-    struct NodeDescription;
-
-    typedef void (*GetNodePropertiesCallback)(const GraphRuntimeSettings* graph_runtime_settings, NodeProperties* out_node_properties);
-    typedef void (*SetupNodeCallback)(const GraphRuntimeSettings* graph_runtime_settings, const NodeDescription* node_description, void* context_memory);
-    typedef void (*RenderNodeCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
-
     struct ParameterDescription
     {
         const char*     m_ParameterName;
@@ -126,14 +114,17 @@ namespace sogo
         };
     };
 
-    struct NodeDescription
+    typedef void (*InitCallback)(HGraph graph, HNode node, const GraphRuntimeSettings* graph_runtime_settings, void* context_memory);
+    typedef void (*RenderCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
+
+    struct NodeDesc
     {
-        GetNodePropertiesCallback       m_GetNodePropertiesCallback;
-        SetupNodeCallback               m_SetupNodeCallback;
-        RenderNodeCallback              m_RenderCallback;
-        const ParameterDescription*     m_Parameters;
+        InitCallback                    m_InitCallback;
+        RenderCallback                  m_RenderCallback;
+        const ParameterDescription*     m_ParameterDescriptions;
         const AudioOutputDescription*   m_AudioOutputDescriptions;
         const TriggerDescription*       m_Triggers;
+        TContextMemorySize              m_ContextMemorySize;
         TAudioInputIndex                m_AudioInputCount;
         TAudioOutputIndex               m_AudioOutputCount;
         TResourceIndex                  m_ResourceCount;
@@ -141,6 +132,9 @@ namespace sogo
         TTriggerInputIndex              m_TriggerInputCount;
         TTriggerOutputIndex             m_TriggerOutputCount;
     };
+
+    typedef void (*GetNodeDescCallback)(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
+
 
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
 
@@ -163,7 +157,7 @@ namespace sogo
     struct GraphDescription
     {
         TNodeIndex                      m_NodeCount;
-        const NodeDescription**         m_NodeDescriptions;
+        const GetNodeDescCallback*      m_NodeDescCallbacks;
         TConnectionIndex                m_AudioConnectionCount;
         const NodeAudioConnection*      m_NodeAudioConnections;
         AudioOutput**                   m_ExternalAudioInputs;
