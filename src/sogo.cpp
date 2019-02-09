@@ -271,6 +271,36 @@ void RenderGraph(HGraph graph, TFrameIndex frame_count)
     }
 }
 
+void GetJobs(HGraph graph, TFrameIndex frame_count, RenderParameters* out_render_parameters)
+{
+    graph->m_ScratchUsedCount = 0;
+    Node* nodes = graph->m_Nodes;
+    TNodeIndex node_count = graph->m_NodeCount;
+
+    TNodeIndex i = 0;
+    while (i < node_count)
+    {
+        Node* node = &nodes[i];
+        RenderParameters& render_parameters = out_render_parameters[i];
+        render_parameters.m_Graph = graph;
+        render_parameters.m_Node = node;
+        render_parameters.m_RenderCallback = node->m_Render;
+        render_parameters.m_AllocateAudioBuffer = AllocateAudioBuffer;
+        render_parameters.m_FrameRate = graph->m_FrameRate;
+        render_parameters.m_FrameCount = frame_count;
+
+        render_parameters.m_AudioInputs = &graph->m_AudioInputs[node->m_AudioInputsOffset];
+        render_parameters.m_AudioOutputs = &graph->m_AudioOutputs[node->m_AudioOutputsOffset];
+        render_parameters.m_Parameters = &graph->m_Parameters[node->m_ParametersOffset];
+        render_parameters.m_Resources = &graph->m_Resources[node->m_ResourcesOffset];
+        render_parameters.m_TriggerInput = &graph->m_TriggerInputs[node->m_TriggerInputOffset];
+        render_parameters.m_TriggerOutputs = &graph->m_TriggerOutputs[node->m_TriggerOutputOffset];
+        render_parameters.m_ContextMemory = &graph->m_ContextMemory[node->m_ContextMemoryOffset];
+        ++i;
+    }
+}
+
+
 bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value)
 {
     if (node_index >= graph->m_NodeCount)

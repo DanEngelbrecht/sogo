@@ -1,5 +1,7 @@
 #include "../src/sogo_nodes.h"
 #include "../src/sogo_utils.h"
+#include "../third-party/nadir/src/nadir.h"
+#include "../third-party/bikeshed/src/bikeshed.h"
 
 #include <memory>
 
@@ -369,8 +371,159 @@ static void sogo_merge_graphs(SCtx* )
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputIndex, 0);
 }
 
+static void sogo_with_bikeshed(SCtx* )
+{
+    static const uint32_t NODE_COUNT = 6;
+    const sogo::GetNodeDescCallback NODES[NODE_COUNT] =
+    {
+        sogo::DCNodeDesc,           // 0.5
+        sogo::GainNodeDesc,         // 0.5 * 0.5
+        sogo::ToStereoNodeDesc,     // 0.5 * 0.5
+        sogo::SplitNodeDesc,        // 0.5 * 0.5
+        sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
+        sogo::MergeNodeDesc         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
+    };
+
+    static const sogo::TFrameRate FRAME_RATE = 44100;
+    static const sogo::TFrameIndex MAX_BATCH_SIZE = 128;
+    static const sogo::TTriggerCount MAX_TRIGGER_EVENT_COUNT = 32;
+    sogo::GraphRuntimeSettings GRAPH_RUNTIME_SETTINGS =
+    {
+        FRAME_RATE,
+        MAX_BATCH_SIZE,
+        MAX_TRIGGER_EVENT_COUNT
+    };
+
+    const char* NODE_NAMES[NODE_COUNT] =
+    {
+        "DC",
+        "DC-Gain",
+        0x0,
+        0x0,
+        "Split-Gain",
+        0x0
+    };
+
+    static const uint16_t CONNECTION_COUNT = 6;
+    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT] =
+    {
+        { 0, 0, 1, 0 },
+        { 1, 0, 2, 0 },
+        { 2, 0, 3, 0 },
+        { 3, 0, 4, 0 },
+        { 4, 0, 5, 0 },
+        { 3, 1, 5, 1 }
+    };
+
+    sogo::GraphDescription GRAPH_DESCRIPTION =
+    {
+        NODE_COUNT,
+        NODES,
+        CONNECTION_COUNT,
+        CONNECTIONS,
+        0x0,
+        0,
+        0x0
+    };
+
+    sogo::GraphSize graph_size;
+    ASSERT_TRUE(sogo::GetGraphSize(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_size));
+
+    size_t s = ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) +
+               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) +
+               ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1) +
+               ALIGN_SIZE(graph_size.m_ContextMemorySize, 1);
+    uint8_t* mem = (uint8_t*)malloc(s);
+    ASSERT_NE(0x0, mem);
+    sogo::GraphBuffers graph_buffers;
+    graph_buffers.m_GraphMem = mem;
+    graph_buffers.m_ScratchBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float))];
+    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex))];
+    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
+
+    sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
+    TEST_ASSERT_NE(0x0, graph);
+
+    sogo::RenderParameters render_parameters[NODE_COUNT];
+
+    sogo::GetJobs(graph, MAX_BATCH_SIZE, render_parameters);
+
+    struct Worker
+    {
+        static bikeshed::TaskResult Render(bikeshed::HShed , bikeshed::TTaskID , void* context_data)
+        {
+            sogo::RenderParameters* render_parameters = (sogo::RenderParameters*)context_data;
+            render_parameters->m_RenderCallback(render_parameters->m_Graph, render_parameters->m_Node, render_parameters);
+            return bikeshed::TASK_RESULT_COMPLETE;
+        }
+    };
+
+    bikeshed::TTaskID task_ids[NODE_COUNT];
+    bikeshed::TaskFunc task_funcs[NODE_COUNT] =
+    {
+        Worker::Render,
+        Worker::Render,
+        Worker::Render,
+        Worker::Render,
+        Worker::Render,
+        Worker::Render
+    };
+    void * task_context_data[NODE_COUNT] =
+    {
+        &render_parameters[0],
+        &render_parameters[1],
+        &render_parameters[2],
+        &render_parameters[3],
+        &render_parameters[4],
+        &render_parameters[5]
+    };
+
+    bikeshed::HShed shed = bikeshed::CreateShed(malloc(bikeshed::GetShedSize(NODE_COUNT, NODE_COUNT)), NODE_COUNT, NODE_COUNT, 0);
+
+    bikeshed::CreateTasks(shed, NODE_COUNT, task_funcs, task_context_data, task_ids);
+
+    for (sogo::TNodeIndex node_index = 0; node_index < NODE_COUNT; ++node_index)
+    {
+        bikeshed::TTaskID child_tasks[NODE_COUNT];
+        uint16_t child_task_count = 0;
+        for (sogo::TConnectionIndex connection_index = 0; connection_index < CONNECTION_COUNT; ++connection_index)
+        {
+            if (CONNECTIONS[connection_index].m_InputNodeIndex == node_index)
+            {
+                child_tasks[child_task_count++] = task_ids[CONNECTIONS[connection_index].m_OutputNodeIndex];
+            }
+        }
+        if (child_task_count == 0)
+        {
+            bikeshed::ReadyTasks(shed, 1, &task_ids[node_index]);
+        }
+        else
+        {
+            bikeshed::AddTaskDependencies(shed, task_ids[node_index], child_task_count, child_tasks);
+        }
+    }
+
+    bikeshed::TTaskID next_ready_task = 0;
+    while(true)
+    {
+        if (next_ready_task != 0)
+        {
+            bikeshed::ExecuteAndResolveTask(shed, next_ready_task, &next_ready_task);
+            continue;
+        }
+        if (!bikeshed::ExecuteOneTask(shed, &next_ready_task))
+        {
+            // Nothing left to do, break!
+            break;
+        }
+    }
+    free(shed);
+    free(graph);
+}
+
 TEST_BEGIN(sogo_test, sogo_main_setup, sogo_main_teardown, test_setup, test_teardown)
     TEST(sogo_create)
     TEST(sogo_simple_graph)
     TEST(sogo_merge_graphs)
+    TEST(sogo_with_bikeshed)
 TEST_END(sogo_test)

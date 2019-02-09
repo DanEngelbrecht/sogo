@@ -74,8 +74,14 @@ namespace sogo
         int32_t m_Int;
     };
 
+    struct RenderParameters;
+    typedef void (*RenderCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
+
     struct RenderParameters
     {
+        HGraph                  m_Graph;
+        HNode                   m_Node;
+        RenderCallback          m_RenderCallback;
         void*                   m_ContextMemory;
         AllocateAudioBufferFunc m_AllocateAudioBuffer;
         TFrameRate              m_FrameRate;
@@ -115,7 +121,6 @@ namespace sogo
     };
 
     typedef void (*InitCallback)(HGraph graph, HNode node, const GraphRuntimeSettings* graph_runtime_settings, void* context_memory);
-    typedef void (*RenderCallback)(HGraph graph, HNode node, const RenderParameters* render_parameters);
 
     struct NodeDesc
     {
@@ -184,6 +189,8 @@ namespace sogo
     bool GetGraphSize(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, GraphSize* out_graph_size);
     HGraph CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
     AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
+
+    void GetJobs(HGraph graph, TFrameIndex frame_count, RenderParameters* out_render_parameters);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value);
     bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerInputIndex trigger_index);
