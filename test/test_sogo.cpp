@@ -75,14 +75,14 @@ static void sogo_create(SCtx* )
 static void sogo_simple_graph(SCtx* )
 {
     static const uint32_t NODE_COUNT = 6;
-    const sogo::NodeDescription* NODES[NODE_COUNT] =
+    const sogo::GetNodeDescCallback NODES[NODE_COUNT] =
     {
-        &sogo::DCNodeDescription,           // 0.5
-        &sogo::GainNodeDescription,         // 0.5 * 0.5
-        &sogo::ToStereoNodeDescription,     // 0.5 * 0.5
-        &sogo::SplitNodeDescription,        // 0.5 * 0.5
-        &sogo::GainNodeDescription,         // 0.5 * 0.5 * 2.0
-        &sogo::MergeNodeDescription         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
+        sogo::DCNodeDesc,           // 0.5
+        sogo::GainNodeDesc,         // 0.5 * 0.5
+        sogo::ToStereoNodeDesc,     // 0.5 * 0.5
+        sogo::SplitNodeDesc,        // 0.5 * 0.5
+        sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
+        sogo::MergeNodeDesc         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
     };
 
     static const sogo::TFrameRate FRAME_RATE = 44100;
@@ -148,6 +148,7 @@ static void sogo_simple_graph(SCtx* )
     struct sogo::AccessDescription ACCESS_DESCRIPTION =
     {
         &GRAPH_DESCRIPTION,
+        &GRAPH_RUNTIME_SETTINGS,
         NODE_NAMES
     };
 
@@ -196,10 +197,10 @@ static void sogo_merge_graphs(SCtx* )
     // This is nore of an authoring test, checking how easy it is to modify graphs
 
     static const sogo::TNodeIndex NODE_COUNT_GENERATOR = 2;
-    const sogo::NodeDescription* NODES_GENERATOR[NODE_COUNT_GENERATOR] =
+    const sogo::GetNodeDescCallback NODES_GENERATOR[NODE_COUNT_GENERATOR] =
     {
-        &sogo::DCNodeDescription,
-        &sogo::GainNodeDescription
+        sogo::DCNodeDesc,
+        sogo::GainNodeDesc
     };
 
     static const sogo::TConnectionIndex CONNECTION_COUNT_GENERATOR = 1;
@@ -221,10 +222,10 @@ static void sogo_merge_graphs(SCtx* )
 
 
     static const sogo::TNodeIndex NODE_COUNT_MIXER = 2;
-    const sogo::NodeDescription* NODES_MIXER[NODE_COUNT_MIXER] =
+    const sogo::GetNodeDescCallback NODES_MIXER[NODE_COUNT_MIXER] =
     {
-        &sogo::MergeNodeDescription,
-        &sogo::GainNodeDescription
+        &sogo::MergeNodeDesc,
+        &sogo::GainNodeDesc
     };
 
     static const sogo::TConnectionIndex CONNECTION_COUNT_MIXER = 1;
@@ -247,7 +248,7 @@ static void sogo_merge_graphs(SCtx* )
 
     // Build graph of two generators going into a mixer
     static const sogo::TNodeIndex NODE_COUNT = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + NODE_COUNT_MIXER;
-    const sogo::NodeDescription* NODES[NODE_COUNT];
+    sogo::GetNodeDescCallback NODES[NODE_COUNT];
     static const sogo::TConnectionIndex CONNECTION_COUNT = CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1 + 1;
     sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT];
 
@@ -348,10 +349,10 @@ static void sogo_merge_graphs(SCtx* )
     };
 
     ASSERT_EQ((NODE_COUNT_GENERATOR + NODE_COUNT_MIXER), GRAPH_DESCRIPTION.m_NodeCount);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[0], &sogo::DCNodeDescription);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[1], &sogo::GainNodeDescription);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[2], &sogo::MergeNodeDescription);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[3], &sogo::GainNodeDescription);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[0], sogo::DCNodeDesc);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[1], sogo::GainNodeDesc);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[2], sogo::MergeNodeDesc);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[3], sogo::GainNodeDesc);
 
     ASSERT_EQ(CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1, GRAPH_DESCRIPTION.m_AudioConnectionCount);
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_InputNodeIndex, 1);

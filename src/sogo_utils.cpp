@@ -78,17 +78,18 @@ static bool GetAccessProperties(
     {
         if (access_description->m_NodeNames[i] != 0x0)
         {
-            const NodeDescription* node_description = graph_description->m_NodeDescriptions[i];
-            for (TParameterIndex p = 0; p < node_description->m_ParameterCount; ++p)
+            NodeDesc node_description;
+            graph_description->m_NodeDescCallbacks[i](access_description->m_GraphRuntimeSettings, &node_description);
+            for (TParameterIndex p = 0; p < node_description.m_ParameterCount; ++p)
             {
-                if (node_description->m_Parameters[p].m_ParameterName != 0x0)
+                if (node_description.m_ParameterDescriptions[p].m_ParameterName != 0x0)
                 {
                     named_parameter_count += 1;
                 }
             }
-            for (TTriggerInputIndex t = 0; t < node_description->m_TriggerInputCount; ++t)
+            for (TTriggerInputIndex t = 0; t < node_description.m_TriggerInputCount; ++t)
             {
-                if (node_description->m_Triggers[t].m_TriggerName != 0x0)
+                if (node_description.m_Triggers[t].m_TriggerName != 0x0)
                 {
                     named_trigger_count += 1;
                 }
@@ -192,10 +193,12 @@ HAccess CreateAccess(
         if (access_description->m_NodeNames[node_index] != 0x0)
         {
             TNodeNameHash node_name_hash = MakeNodeNameHash(access_description->m_NodeNames[node_index]);
-            const NodeDescription* node_description = graph_description->m_NodeDescriptions[node_index];
-            for (TParameterIndex i = 0; i < node_description->m_ParameterCount; ++i)
+
+            NodeDesc node_description;
+            graph_description->m_NodeDescCallbacks[node_index](access_description->m_GraphRuntimeSettings, &node_description);
+            for (TParameterIndex i = 0; i < node_description.m_ParameterCount; ++i)
             {
-                const ParameterDescription* parameter_description = &node_description->m_Parameters[i];
+                const ParameterDescription* parameter_description = &node_description.m_ParameterDescriptions[i];
                 if (parameter_description->m_ParameterName != 0x0)
                 {
                     if (!RegisterNamedParameter(access, node_index, i, node_name_hash, parameter_description->m_ParameterName))
@@ -205,9 +208,9 @@ HAccess CreateAccess(
                 }
             }
 
-            for (TTriggerInputIndex i = 0; i < node_description->m_TriggerInputCount; ++i)
+            for (TTriggerInputIndex i = 0; i < node_description.m_TriggerInputCount; ++i)
             {
-                const TriggerDescription* trigger_description = &node_description->m_Triggers[i];
+                const TriggerDescription* trigger_description = &node_description.m_Triggers[i];
                 if (trigger_description->m_TriggerName != 0x0)
                 {
                     if (!RegisterNamedTrigger(access, node_index, i, node_name_hash, trigger_description->m_TriggerName))
