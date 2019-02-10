@@ -271,7 +271,7 @@ void RenderGraph(HGraph graph, TFrameIndex frame_count)
     }
 }
 
-void GetJobs(HGraph graph, TFrameIndex frame_count, RenderParameters* out_render_parameters)
+void GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs)
 {
     graph->m_ScratchUsedCount = 0;
     Node* nodes = graph->m_Nodes;
@@ -281,10 +281,10 @@ void GetJobs(HGraph graph, TFrameIndex frame_count, RenderParameters* out_render
     while (i < node_count)
     {
         Node* node = &nodes[i];
-        RenderParameters& render_parameters = out_render_parameters[i];
-        render_parameters.m_Graph = graph;
-        render_parameters.m_Node = node;
-        render_parameters.m_RenderCallback = node->m_Render;
+        out_render_jobs[i].m_Graph = graph;
+        out_render_jobs[i].m_Node = node;
+        out_render_jobs[i].m_RenderCallback = node->m_Render;
+        RenderParameters& render_parameters = out_render_jobs[i].m_RenderParameters;
         render_parameters.m_AllocateAudioBuffer = AllocateAudioBuffer;
         render_parameters.m_FrameRate = graph->m_FrameRate;
         render_parameters.m_FrameCount = frame_count;

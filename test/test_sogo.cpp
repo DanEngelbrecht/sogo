@@ -444,16 +444,16 @@ static void sogo_with_bikeshed(SCtx* )
     sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
     TEST_ASSERT_NE(0x0, graph);
 
-    sogo::RenderParameters render_parameters[NODE_COUNT];
+    sogo::RenderJob render_jobs[NODE_COUNT];
 
-    sogo::GetJobs(graph, MAX_BATCH_SIZE, render_parameters);
+    sogo::GetRenderJobs(graph, MAX_BATCH_SIZE, render_jobs);
 
     struct Worker
     {
         static bikeshed::TaskResult Render(bikeshed::HShed , bikeshed::TTaskID , void* context_data)
         {
-            sogo::RenderParameters* render_parameters = (sogo::RenderParameters*)context_data;
-            render_parameters->m_RenderCallback(render_parameters->m_Graph, render_parameters->m_Node, render_parameters);
+            sogo::RenderJob* render_job = (sogo::RenderJob*)context_data;
+            render_job->m_RenderCallback(render_job->m_Graph, render_job->m_Node, &render_job->m_RenderParameters);
             return bikeshed::TASK_RESULT_COMPLETE;
         }
     };
@@ -470,12 +470,12 @@ static void sogo_with_bikeshed(SCtx* )
     };
     void * task_context_data[NODE_COUNT] =
     {
-        &render_parameters[0],
-        &render_parameters[1],
-        &render_parameters[2],
-        &render_parameters[3],
-        &render_parameters[4],
-        &render_parameters[5]
+        &render_jobs[0],
+        &render_jobs[1],
+        &render_jobs[2],
+        &render_jobs[3],
+        &render_jobs[4],
+        &render_jobs[5]
     };
 
     bikeshed::HShed shed = bikeshed::CreateShed(malloc(bikeshed::GetShedSize(NODE_COUNT, NODE_COUNT)), NODE_COUNT, NODE_COUNT, 0);

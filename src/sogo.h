@@ -79,9 +79,6 @@ namespace sogo
 
     struct RenderParameters
     {
-        HGraph                  m_Graph;
-        HNode                   m_Node;
-        RenderCallback          m_RenderCallback;
         void*                   m_ContextMemory;
         AllocateAudioBufferFunc m_AllocateAudioBuffer;
         TFrameRate              m_FrameRate;
@@ -190,7 +187,15 @@ namespace sogo
     HGraph CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
     AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
 
-    void GetJobs(HGraph graph, TFrameIndex frame_count, RenderParameters* out_render_parameters);
+    struct RenderJob
+    {
+        RenderParameters        m_RenderParameters;
+        HGraph                  m_Graph;
+        HNode                   m_Node;
+        RenderCallback          m_RenderCallback;
+    };
+
+    void GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value);
     bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerInputIndex trigger_index);
