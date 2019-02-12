@@ -52,6 +52,9 @@ Building is just the tests right now, no actual application.
 * Event triggering - simple "trigger" event or something more complex?
   * A node can trigger another node using the Trigger(graph, node_index, trigger_index).
   * Need trigger input and output and connections - rename NodeConnection to AudioConnection?
+  * Can multiple trigger outputs connect to same trigger input?
+    * If not, no need to have buffer, just a count of number of triggers is enough
+    * If it can, the dependency graph and how we specify connections need to handle that
 * Should a node be able to alter parameters of another node? Doubtful...
 * FrameRate is now set at Graph construction, not sure this is a good design choice
 * Authoring tools - considering DearImGUI for this, but haven't decided yet

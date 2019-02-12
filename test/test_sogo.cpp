@@ -45,11 +45,7 @@ static void sogo_create(SCtx* )
     {
         0,
         0x0,
-        0,
-        0x0,
-        0x0,
-        0,
-        0x0
+        0
     };
 
     sogo::GraphSize graph_size;
@@ -77,16 +73,6 @@ static void sogo_create(SCtx* )
 static void sogo_simple_graph(SCtx* )
 {
     static const uint32_t NODE_COUNT = 6;
-    const sogo::GetNodeDescCallback NODES[NODE_COUNT] =
-    {
-        sogo::DCNodeDesc,           // 0.5
-        sogo::GainNodeDesc,         // 0.5 * 0.5
-        sogo::ToStereoNodeDesc,     // 0.5 * 0.5
-        sogo::SplitNodeDesc,        // 0.5 * 0.5
-        sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
-        sogo::MergeNodeDesc         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
-    };
-
     static const sogo::TFrameRate FRAME_RATE = 44100;
     static const sogo::TFrameIndex MAX_BATCH_SIZE = 128;
     static const sogo::TTriggerCount MAX_TRIGGER_EVENT_COUNT = 32;
@@ -108,24 +94,107 @@ static void sogo_simple_graph(SCtx* )
     };
 
     static const uint16_t CONNECTION_COUNT = 6;
-    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT] =
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_1[] =
     {
-        { 0, 0, 1, 0 },
-        { 1, 0, 2, 0 },
-        { 2, 0, 3, 0 },
-        { 3, 0, 4, 0 },
-        { 4, 0, 5, 0 },
-        { 3, 1, 5, 1 }
+        0,
+        {
+            0,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_2[] =
+    {
+        0,
+        {
+            1,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_3[] =
+    {
+        0,
+        {
+            2,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_4[] =
+    {
+        0,
+        {
+            3,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_5[] =
+    {
+        0,
+        {
+            4,
+            0
+        },
+        1,
+        {
+            3,
+            1
+        }
+    };
+
+    const sogo::NodeDescription NODES[NODE_COUNT] =
+    {
+        {
+            sogo::DCNodeDesc,           // 0.5
+            0,
+            0x0,
+            0,
+            0x0
+        },
+        {
+            sogo::GainNodeDesc,         // 0.5 * 0.5
+            1,
+            NODE_AUDIO_CONNECTIONS_1,
+            0,
+            0x0
+        },
+        {
+            sogo::ToStereoNodeDesc,     // 0.5 * 0.5
+            1,
+            NODE_AUDIO_CONNECTIONS_2,
+            0,
+            0x0
+        },
+        {
+            sogo::SplitNodeDesc,        // 0.5 * 0.5
+            1,
+            NODE_AUDIO_CONNECTIONS_3,
+            0,
+            0x0
+        },
+        {
+            sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
+            1,
+            NODE_AUDIO_CONNECTIONS_4,
+            0,
+            0x0
+        },
+        {
+            sogo::MergeNodeDesc,        // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
+            2,
+            NODE_AUDIO_CONNECTIONS_5,
+            0,
+            0x0
+        }
     };
 
     sogo::GraphDescription GRAPH_DESCRIPTION =
     {
         NODE_COUNT,
         NODES,
-        CONNECTION_COUNT,
-        CONNECTIONS,
-        0x0,
-        0,
         0x0
     };
 
@@ -197,62 +266,83 @@ static void sogo_simple_graph(SCtx* )
 static void sogo_merge_graphs(SCtx* )
 {
     // This is nore of an authoring test, checking how easy it is to modify graphs
-
-    static const sogo::TNodeIndex NODE_COUNT_GENERATOR = 2;
-    const sogo::GetNodeDescCallback NODES_GENERATOR[NODE_COUNT_GENERATOR] =
+    static const sogo::TConnectionIndex GENERATOR_GAIN_NODE_CONNECTION_COUNT = 1;
+    static const sogo::NodeAudioConnection GENERATOR_GAIN_NODE_CONNECTIONS[GENERATOR_GAIN_NODE_CONNECTION_COUNT] = 
     {
-        sogo::DCNodeDesc,
-        sogo::GainNodeDesc
+        0,
+        {
+            0,
+            0
+        }
     };
 
-    static const sogo::TConnectionIndex CONNECTION_COUNT_GENERATOR = 1;
-    sogo::NodeAudioConnection CONNECTIONS_GENERATOR[CONNECTION_COUNT_GENERATOR] =
+    static const sogo::TNodeIndex NODE_COUNT_GENERATOR = 2;
+    const sogo::NodeDescription NODES_GENERATOR[NODE_COUNT_GENERATOR] =
     {
-        { 0, 0, 1, 0 }
+        {
+            sogo::DCNodeDesc,
+            0,
+            0x0,
+            0,
+            0x0
+        },
+        {
+        sogo::GainNodeDesc,
+            GENERATOR_GAIN_NODE_CONNECTION_COUNT,
+            GENERATOR_GAIN_NODE_CONNECTIONS,
+            0,
+            0x0
+        }
     };
 
     sogo::GraphDescription GRAPH_DESCRIPTION_GENERATOR =
     {
         NODE_COUNT_GENERATOR,
         NODES_GENERATOR,
-        CONNECTION_COUNT_GENERATOR,
-        CONNECTIONS_GENERATOR,
-        0x0,
-        0,
         0x0
     };
 
+    static const sogo::TConnectionIndex MIXER_GAIN_NODE_CONNECTION_COUNT = 1;
+    static const sogo::NodeAudioConnection MIXER_GAIN_NODE_CONNECTIONS[MIXER_GAIN_NODE_CONNECTION_COUNT] = 
+    {
+        0,
+        {
+            0,
+            0
+        }
+    };
 
     static const sogo::TNodeIndex NODE_COUNT_MIXER = 2;
-    const sogo::GetNodeDescCallback NODES_MIXER[NODE_COUNT_MIXER] =
+    const sogo::NodeDescription NODES_MIXER[NODE_COUNT_MIXER] =
     {
-        &sogo::MergeNodeDesc,
-        &sogo::GainNodeDesc
+        {
+            sogo::MergeNodeDesc,
+            0,
+            0x0,
+            0,
+            0x0
+        },
+        {
+        sogo::GainNodeDesc,
+            GENERATOR_GAIN_NODE_CONNECTION_COUNT,
+            GENERATOR_GAIN_NODE_CONNECTIONS,
+            0,
+            0x0
+        }
     };
 
-    static const sogo::TConnectionIndex CONNECTION_COUNT_MIXER = 1;
-    sogo::NodeAudioConnection CONNECTIONS_MIXER[CONNECTION_COUNT_MIXER] =
-    {
-        { 0, 0, 1, 0 }
-    };
 
     sogo::GraphDescription GRAPH_DESCRIPTION_MIXER =
     {
         NODE_COUNT_MIXER,
         NODES_MIXER,
-        CONNECTION_COUNT_MIXER,
-        CONNECTIONS_MIXER,
-        0x0,
-        0,
         0x0
     };
 
-
+#if 0
     // Build graph of two generators going into a mixer
     static const sogo::TNodeIndex NODE_COUNT = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + NODE_COUNT_MIXER;
-    sogo::GetNodeDescCallback NODES[NODE_COUNT];
-    static const sogo::TConnectionIndex CONNECTION_COUNT = CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1 + 1;
-    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT];
+    sogo::NodeDescription NODES[NODE_COUNT];
 
     // Merge the three graphs
     sogo::TNodeIndex node_index = 0;
@@ -369,21 +459,12 @@ static void sogo_merge_graphs(SCtx* )
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_InputIndex, 0);
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputNodeIndex, 1);
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputIndex, 0);
+#endif
 }
 
 static void sogo_with_bikeshed(SCtx* )
 {
     static const uint32_t NODE_COUNT = 6;
-    const sogo::GetNodeDescCallback NODES[NODE_COUNT] =
-    {
-        sogo::DCNodeDesc,           // 0.5
-        sogo::GainNodeDesc,         // 0.5 * 0.5
-        sogo::ToStereoNodeDesc,     // 0.5 * 0.5
-        sogo::SplitNodeDesc,        // 0.5 * 0.5
-        sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
-        sogo::MergeNodeDesc         // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
-    };
-
     static const sogo::TFrameRate FRAME_RATE = 44100;
     static const sogo::TFrameIndex MAX_BATCH_SIZE = 128;
     static const sogo::TTriggerCount MAX_TRIGGER_EVENT_COUNT = 32;
@@ -405,24 +486,107 @@ static void sogo_with_bikeshed(SCtx* )
     };
 
     static const uint16_t CONNECTION_COUNT = 6;
-    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT] =
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_1[] =
     {
-        { 0, 0, 1, 0 },
-        { 1, 0, 2, 0 },
-        { 2, 0, 3, 0 },
-        { 3, 0, 4, 0 },
-        { 4, 0, 5, 0 },
-        { 3, 1, 5, 1 }
+        0,
+        {
+            0,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_2[] =
+    {
+        0,
+        {
+            1,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_3[] =
+    {
+        0,
+        {
+            2,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_4[] =
+    {
+        0,
+        {
+            3,
+            0
+        }
+    };
+
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_5[] =
+    {
+        0,
+        {
+            4,
+            0
+        },
+        1,
+        {
+            3,
+            1
+        }
+    };
+
+    const sogo::NodeDescription NODES[NODE_COUNT] =
+    {
+        {
+            sogo::DCNodeDesc,           // 0.5
+            0,
+            0x0,
+            0,
+            0x0
+        },
+        {
+            sogo::GainNodeDesc,         // 0.5 * 0.5
+            1,
+            NODE_AUDIO_CONNECTIONS_1,
+            0,
+            0x0
+        },
+        {
+            sogo::ToStereoNodeDesc,     // 0.5 * 0.5
+            1,
+            NODE_AUDIO_CONNECTIONS_2,
+            0,
+            0x0
+        },
+        {
+            sogo::SplitNodeDesc,        // 0.5 * 0.5
+            1,
+            NODE_AUDIO_CONNECTIONS_3,
+            0,
+            0x0
+        },
+        {
+            sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
+            1,
+            NODE_AUDIO_CONNECTIONS_4,
+            0,
+            0x0
+        },
+        {
+            sogo::MergeNodeDesc,        // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
+            2,
+            NODE_AUDIO_CONNECTIONS_5,
+            0,
+            0x0
+        }
     };
 
     sogo::GraphDescription GRAPH_DESCRIPTION =
     {
         NODE_COUNT,
         NODES,
-        CONNECTION_COUNT,
-        CONNECTIONS,
-        0x0,
-        0,
         0x0
     };
 
@@ -482,23 +646,23 @@ static void sogo_with_bikeshed(SCtx* )
 
     bikeshed::CreateTasks(shed, NODE_COUNT, task_funcs, task_context_data, task_ids);
 
+    // A bit sad that we need to rebuild this task job list each batch even if
+    // the graph does not change
+    // IDEA: CreateSnapshot of TaskManager state and then just have a reset?
+    bikeshed::TTaskID child_tasks[NODE_COUNT];
     for (sogo::TNodeIndex node_index = 0; node_index < NODE_COUNT; ++node_index)
     {
-        bikeshed::TTaskID child_tasks[NODE_COUNT];
-        uint16_t child_task_count = 0;
-        for (sogo::TConnectionIndex connection_index = 0; connection_index < CONNECTION_COUNT; ++connection_index)
-        {
-            if (CONNECTIONS[connection_index].m_InputNodeIndex == node_index)
-            {
-                child_tasks[child_task_count++] = task_ids[CONNECTIONS[connection_index].m_OutputNodeIndex];
-            }
-        }
+        uint16_t child_task_count = render_jobs[node_index].m_DependencyCount;
         if (child_task_count == 0)
         {
             bikeshed::ReadyTasks(shed, 1, &task_ids[node_index]);
         }
         else
         {
+            for (sogo::TNodeIndex i = 0; i < child_task_count; ++i)
+            {
+                child_tasks[i] = task_ids[render_jobs[node_index].m_Dependencies[i]];
+            }
             bikeshed::AddTaskDependencies(shed, task_ids[node_index], child_task_count, child_tasks);
         }
     }
