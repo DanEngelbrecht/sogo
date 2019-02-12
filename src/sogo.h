@@ -38,16 +38,16 @@ namespace sogo
         AudioOutput*    m_AudioOutput;
     };
 
+    struct TriggerOutput
+    {
+        TNodeIndex          m_InputNode;
+        TTriggerInputIndex  m_Trigger;
+    };
+
     struct TriggerInput
     {
         TTriggerInputIndex* m_Buffer;
         TTriggerCount       m_Count;
-    };
-
-    struct TriggerOutput
-    {
-        TNodeIndex          m_Node;
-        TTriggerInputIndex  m_Trigger;
     };
 
     struct Resource
@@ -119,14 +119,21 @@ namespace sogo
 
     typedef void (*InitCallback)(HGraph graph, HNode node, const GraphRuntimeSettings* graph_runtime_settings, void* context_memory);
 
-    struct NodeDesc
+    struct NodeRuntimeDescription
     {
         InitCallback                    m_InitCallback;
         RenderCallback                  m_RenderCallback;
+        TContextMemorySize              m_ContextMemorySize;
+    };
+
+    typedef void (*GetNodeRuntimeDescription)(const GraphRuntimeSettings* graph_runtime_settings, NodeRuntimeDescription* out_node_runtime_desc);
+
+    struct NodeStaticDescription
+    {
+        GetNodeRuntimeDescription       m_GetNodeRuntimeDescCallback;
         const ParameterDescription*     m_ParameterDescriptions;
         const AudioOutputDescription*   m_AudioOutputDescriptions;
         const TriggerDescription*       m_Triggers;
-        TContextMemorySize              m_ContextMemorySize;
         TAudioInputIndex                m_AudioInputCount;
         TAudioOutputIndex               m_AudioOutputCount;
         TResourceIndex                  m_ResourceCount;
@@ -135,36 +142,46 @@ namespace sogo
         TTriggerOutputIndex             m_TriggerOutputCount;
     };
 
-    typedef void (*GetNodeDescCallback)(const GraphRuntimeSettings* graph_runtime_settings, NodeDesc* out_node_desc);
-
-
     static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
 
-    struct NodeAudioConnection
+    struct NodeAudioOutputConnection
     {
         TNodeIndex          m_OutputNodeIndex;
         TAudioOutputIndex   m_OutputIndex;
-        TNodeIndex          m_InputNodeIndex;
-        TAudioInputIndex    m_InputIndex;
+    };
+
+    struct NodeAudioConnection
+    {
+        TAudioInputIndex            m_InputIndex;
+        NodeAudioOutputConnection   m_OutputConnection;
+    };
+
+    struct NodeTriggerOutputConnection
+    {
+        TNodeIndex          m_OutputNodeIndex;
+        TTriggerOutputIndex m_OutputTriggerIndex;
     };
 
     struct NodeTriggerConnection
     {
-        TNodeIndex          m_OutputNodeIndex;
-        TTriggerOutputIndex m_OutputTriggerIndex;
-        TNodeIndex          m_InputNodeIndex;
-        TTriggerInputIndex  m_InputTriggerIndex;
+        TTriggerInputIndex          m_InputTriggerIndex;
+        NodeTriggerOutputConnection m_OutputConnection;
+    };
+
+    struct NodeDescription
+    {
+        NodeStaticDescription           m_NodeStaticDescription;
+        TConnectionIndex                m_AudioConnectionCount;
+        const NodeAudioConnection*      m_AudioConnections;
+        TConnectionIndex                m_TriggerConnectionCount;
+        const NodeTriggerConnection*    m_TriggerConnections;
     };
 
     struct GraphDescription
     {
         TNodeIndex                      m_NodeCount;
-        const GetNodeDescCallback*      m_NodeDescCallbacks;
-        TConnectionIndex                m_AudioConnectionCount;
-        const NodeAudioConnection*      m_NodeAudioConnections;
+        const NodeDescription*          m_NodeDescriptions;
         AudioOutput**                   m_ExternalAudioInputs;
-        TConnectionIndex                m_TriggerConnectionCount;
-        const NodeTriggerConnection*    m_NodeTriggerConnections;
     };
 
     struct GraphSize
@@ -190,9 +207,11 @@ namespace sogo
     struct RenderJob
     {
         RenderParameters        m_RenderParameters;
+        RenderCallback          m_RenderCallback;
         HGraph                  m_Graph;
         HNode                   m_Node;
-        RenderCallback          m_RenderCallback;
+        TNodeIndex              m_DependencyCount;
+        TNodeIndex*             m_Dependencies;
     };
 
     void GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs);

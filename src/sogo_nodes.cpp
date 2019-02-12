@@ -67,21 +67,26 @@ static struct AudioOutputDescription SplitNodeAudioOutputDescriptions[SOGO_SPLIT
     {AudioOutputDescription::AS_INPUT, {0}}
 };
 
-void SplitNodeDesc(const GraphRuntimeSettings* , NodeDesc* out_node_desc)
+static void SplitNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_desc->m_InitCallback = 0x0;
-    out_node_desc->m_RenderCallback = RenderSplit;
-    out_node_desc->m_ParameterDescriptions = 0;
-    out_node_desc->m_AudioOutputDescriptions = SplitNodeAudioOutputDescriptions;
-    out_node_desc->m_Triggers = 0;
-    out_node_desc->m_ContextMemorySize = 0;
-    out_node_desc->m_AudioInputCount = SOGO_SPLIT_AUDIO_INPUT_COUNT;
-    out_node_desc->m_AudioOutputCount = SOGO_SPLIT_AUDIO_OUTPUT_COUNT;
-    out_node_desc->m_ResourceCount = SOGO_SPLIT_RESOURCE_COUNT;
-    out_node_desc->m_ParameterCount = SOGO_SPLIT_PARAMETER_COUNT;
-    out_node_desc->m_TriggerInputCount = SOGO_SPLIT_TRIGGER_INPUT_COUNT;
-    out_node_desc->m_TriggerOutputCount = SOGO_SPLIT_TRIGGER_OUTPUT_COUNT;
+    out_node_runtime_desc->m_InitCallback = 0;
+    out_node_runtime_desc->m_RenderCallback = RenderSplit;
+    out_node_runtime_desc->m_ContextMemorySize = 0;
 }
+
+const NodeStaticDescription SplitNodeDesc =
+{
+    SplitNodeGetNodeRuntimeDescCallback,
+    0x0,
+    SplitNodeAudioOutputDescriptions,
+    0x0,
+    SOGO_SPLIT_AUDIO_INPUT_COUNT,
+    SOGO_SPLIT_AUDIO_OUTPUT_COUNT,
+    SOGO_SPLIT_RESOURCE_COUNT,
+    SOGO_SPLIT_PARAMETER_COUNT,
+    SOGO_SPLIT_TRIGGER_INPUT_COUNT,
+    SOGO_SPLIT_TRIGGER_OUTPUT_COUNT
+};
 
 
 ///////////////////// SOGO MERGE
@@ -170,21 +175,26 @@ static struct AudioOutputDescription MergeNodeAudioOutputDescriptions[SOGO_MERGE
     {AudioOutputDescription::PASS_THROUGH, {0}}
 };
 
-void MergeNodeDesc(const GraphRuntimeSettings* , NodeDesc* out_node_desc)
+static void MergeNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_desc->m_InitCallback = 0x0;
-    out_node_desc->m_RenderCallback = RenderMerge;
-    out_node_desc->m_ParameterDescriptions = 0;
-    out_node_desc->m_AudioOutputDescriptions = MergeNodeAudioOutputDescriptions;
-    out_node_desc->m_Triggers = 0;
-    out_node_desc->m_ContextMemorySize = 0;
-    out_node_desc->m_AudioInputCount = SOGO_MERGE_AUDIO_INPUT_COUNT;
-    out_node_desc->m_AudioOutputCount = SOGO_MERGE_AUDIO_OUTPUT_COUNT;
-    out_node_desc->m_ResourceCount = SOGO_MERGE_RESOURCE_COUNT;
-    out_node_desc->m_ParameterCount = SOGO_MERGE_PARAMETER_COUNT;
-    out_node_desc->m_TriggerInputCount = SOGO_MERGE_TRIGGER_INPUT_COUNT;
-    out_node_desc->m_TriggerOutputCount = SOGO_MERGE_TRIGGER_OUTPUT_COUNT;
+    out_node_runtime_desc->m_InitCallback = 0;
+    out_node_runtime_desc->m_RenderCallback = RenderMerge;
+    out_node_runtime_desc->m_ContextMemorySize = 0;
 }
+
+const NodeStaticDescription MergeNodeDesc =
+{
+    MergeNodeGetNodeRuntimeDescCallback,
+    0x0,
+    MergeNodeAudioOutputDescriptions,
+    0x0,
+    SOGO_MERGE_AUDIO_INPUT_COUNT,
+    SOGO_MERGE_AUDIO_OUTPUT_COUNT,
+    SOGO_MERGE_RESOURCE_COUNT,
+    SOGO_MERGE_PARAMETER_COUNT,
+    SOGO_MERGE_TRIGGER_INPUT_COUNT,
+    SOGO_MERGE_TRIGGER_OUTPUT_COUNT
+};
 
 ///////////////////// SOGO GAIN
 
@@ -332,21 +342,26 @@ static struct AudioOutputDescription GainNodeAudioOutputDescriptions[SOGO_GAIN_A
     {AudioOutputDescription::PASS_THROUGH, {0}}
 };
 
-void GainNodeDesc(const GraphRuntimeSettings* , NodeDesc* out_node_desc)
+static void GainNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_desc->m_InitCallback = 0x0;
-    out_node_desc->m_RenderCallback = RenderGain;
-    out_node_desc->m_ParameterDescriptions = GainParameters;
-    out_node_desc->m_AudioOutputDescriptions = GainNodeAudioOutputDescriptions;
-    out_node_desc->m_Triggers = 0;
-    out_node_desc->m_ContextMemorySize = 0;
-    out_node_desc->m_AudioInputCount = SOGO_GAIN_AUDIO_INPUT_COUNT;
-    out_node_desc->m_AudioOutputCount = SOGO_GAIN_AUDIO_OUTPUT_COUNT;
-    out_node_desc->m_ResourceCount = SOGO_GAIN_RESOURCE_COUNT;
-    out_node_desc->m_ParameterCount = SOGO_GAIN_PARAMETER_COUNT;
-    out_node_desc->m_TriggerInputCount = SOGO_GAIN_TRIGGER_INPUT_COUNT;
-    out_node_desc->m_TriggerOutputCount = SOGO_GAIN_TRIGGER_OUTPUT_COUNT;
+    out_node_runtime_desc->m_InitCallback = 0;
+    out_node_runtime_desc->m_RenderCallback = RenderGain;
+    out_node_runtime_desc->m_ContextMemorySize = 0;
 }
+
+const NodeStaticDescription GainNodeDesc =
+{
+    GainNodeGetNodeRuntimeDescCallback,
+    GainParameters,
+    GainNodeAudioOutputDescriptions,
+    0x0,
+    SOGO_GAIN_AUDIO_INPUT_COUNT,
+    SOGO_GAIN_AUDIO_OUTPUT_COUNT,
+    SOGO_GAIN_RESOURCE_COUNT,
+    SOGO_GAIN_PARAMETER_COUNT,
+    SOGO_GAIN_TRIGGER_INPUT_COUNT,
+    SOGO_GAIN_TRIGGER_OUTPUT_COUNT
+};
 
 
 ///////////////////// SOGO SINE
@@ -428,21 +443,26 @@ static struct AudioOutputDescription SineNodeAudioOutputDescriptions[SOGO_SINE_A
     {AudioOutputDescription::FIXED, {1}}
 };
 
-void SineNodeDesc(const GraphRuntimeSettings* , NodeDesc* out_node_desc)
+static void SineNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_desc->m_InitCallback = 0x0;
-    out_node_desc->m_RenderCallback = RenderSine;
-    out_node_desc->m_ParameterDescriptions = SineParameters;
-    out_node_desc->m_AudioOutputDescriptions = SineNodeAudioOutputDescriptions;
-    out_node_desc->m_Triggers = 0;
-    out_node_desc->m_ContextMemorySize = 0;
-    out_node_desc->m_AudioInputCount = SOGO_SINE_AUDIO_INPUT_COUNT;
-    out_node_desc->m_AudioOutputCount = SOGO_SINE_AUDIO_OUTPUT_COUNT;
-    out_node_desc->m_ResourceCount = SOGO_SINE_RESOURCE_COUNT;
-    out_node_desc->m_ParameterCount = SOGO_SINE_PARAMETER_COUNT;
-    out_node_desc->m_TriggerInputCount = SOGO_SINE_TRIGGER_INPUT_COUNT;
-    out_node_desc->m_TriggerOutputCount = SOGO_SINE_TRIGGER_OUTPUT_COUNT;
+    out_node_runtime_desc->m_InitCallback = 0;
+    out_node_runtime_desc->m_RenderCallback = RenderSine;
+    out_node_runtime_desc->m_ContextMemorySize = 0;
 }
+
+const NodeStaticDescription SineNodeDesc =
+{
+    SineNodeGetNodeRuntimeDescCallback,
+    SineParameters,
+    SineNodeAudioOutputDescriptions,
+    0x0,
+    SOGO_SINE_AUDIO_INPUT_COUNT,
+    SOGO_SINE_AUDIO_OUTPUT_COUNT,
+    SOGO_SINE_RESOURCE_COUNT,
+    SOGO_SINE_PARAMETER_COUNT,
+    SOGO_SINE_TRIGGER_INPUT_COUNT,
+    SOGO_SINE_TRIGGER_OUTPUT_COUNT
+};
 
 
 ///////////////////// SOGO MAKE_STEREO
@@ -521,21 +541,27 @@ static struct AudioOutputDescription ToStereoNodeAudioOutputDescriptions[SOGO_TO
     {AudioOutputDescription::FIXED, {2}}
 };
 
-void ToStereoNodeDesc(const GraphRuntimeSettings* , NodeDesc* out_node_desc)
+static void ToStereoNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_desc->m_InitCallback = 0x0;
-    out_node_desc->m_RenderCallback = RenderToStereo;
-    out_node_desc->m_ParameterDescriptions = 0;
-    out_node_desc->m_AudioOutputDescriptions = ToStereoNodeAudioOutputDescriptions;
-    out_node_desc->m_Triggers = 0;
-    out_node_desc->m_ContextMemorySize = 0;
-    out_node_desc->m_AudioInputCount = SOGO_TOSTEREO_AUDIO_INPUT_COUNT;
-    out_node_desc->m_AudioOutputCount = SOGO_TOSTEREO_AUDIO_OUTPUT_COUNT;
-    out_node_desc->m_ResourceCount = SOGO_TOSTEREO_RESOURCE_COUNT;
-    out_node_desc->m_ParameterCount = SOGO_TOSTEREO_PARAMETER_COUNT;
-    out_node_desc->m_TriggerInputCount = SOGO_TOSTEREO_TRIGGER_INPUT_COUNT;
-    out_node_desc->m_TriggerOutputCount = SOGO_TOSTEREO_TRIGGER_OUTPUT_COUNT;
+    out_node_runtime_desc->m_InitCallback = 0;
+    out_node_runtime_desc->m_RenderCallback = RenderToStereo;
+    out_node_runtime_desc->m_ContextMemorySize = 0;
 }
+
+
+const NodeStaticDescription ToStereoNodeDesc =
+{
+    ToStereoNodeGetNodeRuntimeDescCallback,
+    0x0,
+    ToStereoNodeAudioOutputDescriptions,
+    0x0,
+    SOGO_TOSTEREO_AUDIO_INPUT_COUNT,
+    SOGO_TOSTEREO_AUDIO_OUTPUT_COUNT,
+    SOGO_TOSTEREO_RESOURCE_COUNT,
+    SOGO_TOSTEREO_PARAMETER_COUNT,
+    SOGO_TOSTEREO_TRIGGER_INPUT_COUNT,
+    SOGO_TOSTEREO_TRIGGER_OUTPUT_COUNT
+};
 
 
 
@@ -595,21 +621,26 @@ static struct AudioOutputDescription DCNodeAudioOutputDescriptions[SOGO_DC_AUDIO
     {AudioOutputDescription::FIXED, {1}}
 };
 
-void DCNodeDesc(const GraphRuntimeSettings* , NodeDesc* out_node_desc)
+static void DCNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_desc->m_InitCallback = 0x0;
-    out_node_desc->m_RenderCallback = RenderDC;
-    out_node_desc->m_ParameterDescriptions = DCParameters;
-    out_node_desc->m_AudioOutputDescriptions = DCNodeAudioOutputDescriptions;
-    out_node_desc->m_Triggers = 0;
-    out_node_desc->m_ContextMemorySize = 0;
-    out_node_desc->m_AudioInputCount = SOGO_DC_AUDIO_INPUT_COUNT;
-    out_node_desc->m_AudioOutputCount = SOGO_DC_AUDIO_OUTPUT_COUNT;
-    out_node_desc->m_ResourceCount = SOGO_DC_RESOURCE_COUNT;
-    out_node_desc->m_ParameterCount = SOGO_DC_PARAMETER_COUNT;
-    out_node_desc->m_TriggerInputCount = SOGO_DC_TRIGGER_INPUT_COUNT;
-    out_node_desc->m_TriggerOutputCount = SOGO_DC_TRIGGER_OUTPUT_COUNT;
+    out_node_runtime_desc->m_InitCallback = 0;
+    out_node_runtime_desc->m_RenderCallback = RenderDC;
+    out_node_runtime_desc->m_ContextMemorySize = 0;
 }
+
+const NodeStaticDescription DCNodeDesc =
+{
+    DCNodeGetNodeRuntimeDescCallback,
+    DCParameters,
+    DCNodeAudioOutputDescriptions,
+    0x0,
+    SOGO_DC_AUDIO_INPUT_COUNT,
+    SOGO_DC_AUDIO_OUTPUT_COUNT,
+    SOGO_DC_RESOURCE_COUNT,
+    SOGO_DC_PARAMETER_COUNT,
+    SOGO_DC_TRIGGER_INPUT_COUNT,
+    SOGO_DC_TRIGGER_OUTPUT_COUNT
+};
 
 
 #if 0
