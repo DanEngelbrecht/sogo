@@ -9,13 +9,12 @@ namespace sogo
     // Offset is how far into a global array something is - offset to first audio input of a node in the graphs audio input array
 
     typedef uint16_t    TNodeIndex;
+    typedef int16_t     TNodeOffset;
     typedef uint8_t     TParameterIndex;
-    typedef uint8_t     TTriggerInputIndex;
-    typedef uint8_t     TTriggerOutputIndex;
+    typedef uint8_t     TTriggerSocketIndex;
     typedef uint16_t    TTriggerCount;
     typedef uint8_t     TResourceIndex;
-    typedef uint8_t     TAudioInputIndex;
-    typedef uint8_t     TAudioOutputIndex;
+    typedef uint8_t     TAudioSocketIndex;
     typedef uint8_t     TChannelIndex;
     typedef uint8_t     TConnectionIndex;
     typedef uint32_t    TFrameIndex;
@@ -41,12 +40,12 @@ namespace sogo
     struct TriggerOutput
     {
         TNodeIndex          m_InputNode;
-        TTriggerInputIndex  m_Trigger;
+        TTriggerSocketIndex  m_Trigger;
     };
 
     struct TriggerInput
     {
-        TTriggerInputIndex* m_Buffer;
+        TTriggerSocketIndex* m_Buffer;
         TTriggerCount       m_Count;
     };
 
@@ -113,7 +112,7 @@ namespace sogo
         uint16_t m_Mode;
         union {
             TChannelIndex       m_ChannelCount;    // FIXED
-            TAudioInputIndex    m_InputIndex;      // AS_INPUT
+            TAudioSocketIndex    m_InputIndex;      // AS_INPUT
         };
     };
 
@@ -134,37 +133,37 @@ namespace sogo
         const ParameterDescription*     m_ParameterDescriptions;
         const AudioOutputDescription*   m_AudioOutputDescriptions;
         const TriggerDescription*       m_Triggers;
-        TAudioInputIndex                m_AudioInputCount;
-        TAudioOutputIndex               m_AudioOutputCount;
+        TAudioSocketIndex                m_AudioInputCount;
+        TAudioSocketIndex               m_AudioOutputCount;
         TResourceIndex                  m_ResourceCount;
         TParameterIndex                 m_ParameterCount;
-        TTriggerInputIndex              m_TriggerInputCount;
-        TTriggerOutputIndex             m_TriggerOutputCount;
+        TTriggerSocketIndex              m_TriggerInputCount;
+        TTriggerSocketIndex             m_TriggerOutputCount;
     };
 
-    static const TNodeIndex EXTERNAL_NODE_INDEX = (TNodeIndex)-1;
+    static const TNodeOffset EXTERNAL_NODE_OFFSET = 0;
 
     struct NodeAudioOutputConnection
     {
-        TNodeIndex          m_OutputNodeIndex;
-        TAudioOutputIndex   m_OutputIndex;
+        TNodeOffset         m_OutputOffset;
+        TAudioSocketIndex   m_OutputIndex;
     };
 
     struct NodeAudioConnection
     {
-        TAudioInputIndex            m_InputIndex;
+        TAudioSocketIndex           m_InputIndex;
         NodeAudioOutputConnection   m_OutputConnection;
     };
 
     struct NodeTriggerOutputConnection
     {
-        TNodeIndex          m_OutputNodeIndex;
-        TTriggerOutputIndex m_OutputTriggerIndex;
+        TNodeOffset         m_OutputOffset;
+        TTriggerSocketIndex m_OutputTriggerIndex;
     };
 
     struct NodeTriggerConnection
     {
-        TTriggerInputIndex          m_InputTriggerIndex;
+        TTriggerSocketIndex         m_InputTriggerIndex;
         NodeTriggerOutputConnection m_OutputConnection;
     };
 
@@ -202,7 +201,7 @@ namespace sogo
 
     bool GetGraphSize(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, GraphSize* out_graph_size);
     HGraph CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
-    AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
+    AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioSocketIndex output_index);
 
     struct RenderJob
     {
@@ -217,9 +216,9 @@ namespace sogo
     void GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs);
 
     bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value);
-    bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerInputIndex trigger_index);
+    bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerSocketIndex trigger_index);
     bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource);
 
     void RenderGraph(HGraph graph, TFrameIndex frame_count);
-    AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioOutputIndex output_index);
+    AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioSocketIndex output_index);
 }

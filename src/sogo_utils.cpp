@@ -18,7 +18,7 @@ struct ParameterTarget
 struct TriggerTarget
 {
     TNodeIndex m_NodeIndex;
-    TTriggerInputIndex m_TriggerIndex;
+    TTriggerSocketIndex m_TriggerIndex;
 };
 
 typedef jc::HashTable<TParameterNameHash, ParameterTarget> TParameterLookup;
@@ -41,7 +41,7 @@ static uint32_t GetTriggerLookupSize(uint32_t num_elements)
 struct Access {
     Access(
         TParameterIndex named_parameter_count,
-        TTriggerInputIndex named_trigger_count,
+        TTriggerSocketIndex named_trigger_count,
         void* parameter_lookup_data,
         void* trigger_lookup_data);
 
@@ -51,7 +51,7 @@ struct Access {
 
 Access::Access(
         TParameterIndex named_parameter_count,
-        TTriggerInputIndex named_trigger_count,
+        TTriggerSocketIndex named_trigger_count,
         void* parameter_lookup_data,
         void* trigger_lookup_data)
     : m_ParameterLookup(named_parameter_count, parameter_lookup_data)
@@ -63,7 +63,7 @@ Access::Access(
 struct AccessProperties
 {
     TParameterIndex m_NamedParameterCount;
-    TTriggerInputIndex m_NamedTriggerCount;
+    TTriggerSocketIndex m_NamedTriggerCount;
 };
 
 static bool GetAccessProperties(
@@ -71,7 +71,7 @@ static bool GetAccessProperties(
     AccessProperties* out_access_properties)
 {
     TParameterIndex named_parameter_count = 0;
-    TTriggerInputIndex named_trigger_count = 0;
+    TTriggerSocketIndex named_trigger_count = 0;
 
     const GraphDescription* graph_description = access_description->m_GraphDescription;
     for (TNodeIndex i = 0; i < graph_description->m_NodeCount; ++i)
@@ -86,7 +86,7 @@ static bool GetAccessProperties(
                     named_parameter_count += 1;
                 }
             }
-            for (TTriggerInputIndex t = 0; t < node_static_description.m_TriggerInputCount; ++t)
+            for (TTriggerSocketIndex t = 0; t < node_static_description.m_TriggerInputCount; ++t)
             {
                 if (node_static_description.m_Triggers[t].m_TriggerName != 0x0)
                 {
@@ -151,7 +151,7 @@ static bool RegisterNamedParameter(HAccess access, TNodeIndex node_index, TParam
     return true;
 }
 
-static bool RegisterNamedTrigger(HAccess access, TNodeIndex node_index, TTriggerInputIndex trigger_index, TNodeNameHash node_name_hash, const char* trigger_name)
+static bool RegisterNamedTrigger(HAccess access, TNodeIndex node_index, TTriggerSocketIndex trigger_index, TNodeNameHash node_name_hash, const char* trigger_name)
 {
     uint32_t node_key = MakeTriggerHash(node_name_hash, trigger_name);
     TriggerTarget target;
@@ -206,7 +206,7 @@ HAccess CreateAccess(
                 }
             }
 
-            for (TTriggerInputIndex i = 0; i < node_static_description.m_TriggerInputCount; ++i)
+            for (TTriggerSocketIndex i = 0; i < node_static_description.m_TriggerInputCount; ++i)
             {
                 const TriggerDescription* trigger_description = &node_static_description.m_Triggers[i];
                 if (trigger_description->m_TriggerName != 0x0)

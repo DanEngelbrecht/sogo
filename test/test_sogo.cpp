@@ -52,7 +52,7 @@ static void sogo_create(SCtx* )
     ASSERT_TRUE(sogo::GetGraphSize(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_size));
 
     size_t s = ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) +
-               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) +
+               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex)) +
                ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1) +
                ALIGN_SIZE(graph_size.m_ContextMemorySize, 1);
     uint8_t* mem = (uint8_t*)malloc(s);
@@ -60,8 +60,8 @@ static void sogo_create(SCtx* )
     sogo::GraphBuffers graph_buffers;
     graph_buffers.m_GraphMem = mem;
     graph_buffers.m_ScratchBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float))];
-    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex))];
-    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
+    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex))];
+    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
 
     sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
     TEST_ASSERT_NE(0x0, graph);
@@ -99,7 +99,7 @@ static void sogo_simple_graph(SCtx* )
     {
         0,
         {
-            0,
+            -1,
             0
         }
     };
@@ -108,7 +108,7 @@ static void sogo_simple_graph(SCtx* )
     {
         0,
         {
-            1,
+            -1,
             0
         }
     };
@@ -117,7 +117,7 @@ static void sogo_simple_graph(SCtx* )
     {
         0,
         {
-            2,
+            -1,
             0
         }
     };
@@ -126,7 +126,7 @@ static void sogo_simple_graph(SCtx* )
     {
         0,
         {
-            3,
+            -1,
             0
         }
     };
@@ -135,12 +135,12 @@ static void sogo_simple_graph(SCtx* )
     {
         0,
         {
-            4,
+            -1,
             0
         },
         1,
         {
-            3,
+            -2,
             1
         }
     };
@@ -202,7 +202,7 @@ static void sogo_simple_graph(SCtx* )
     ASSERT_TRUE(sogo::GetGraphSize(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_size));
 
     size_t s = ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) +
-               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) +
+               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex)) +
                ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1) +
                ALIGN_SIZE(graph_size.m_ContextMemorySize, 1);
     uint8_t* mem = (uint8_t*)malloc(s);
@@ -210,8 +210,8 @@ static void sogo_simple_graph(SCtx* )
     sogo::GraphBuffers graph_buffers;
     graph_buffers.m_GraphMem = mem;
     graph_buffers.m_ScratchBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float))];
-    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex))];
-    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
+    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex))];
+    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
 
     sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
     TEST_ASSERT_NE(0x0, graph);
@@ -271,7 +271,7 @@ static void sogo_merge_graphs(SCtx* )
     {
         0,
         {
-            0,
+            -1,
             0
         }
     };
@@ -307,7 +307,7 @@ static void sogo_merge_graphs(SCtx* )
     {
         0,
         {
-            0,
+            -1,
             0
         }
     };
@@ -491,7 +491,7 @@ static void sogo_with_bikeshed(SCtx* )
     {
         0,
         {
-            0,
+            -1,
             0
         }
     };
@@ -500,7 +500,7 @@ static void sogo_with_bikeshed(SCtx* )
     {
         0,
         {
-            1,
+            -1,
             0
         }
     };
@@ -509,7 +509,7 @@ static void sogo_with_bikeshed(SCtx* )
     {
         0,
         {
-            2,
+            -1,
             0
         }
     };
@@ -518,7 +518,7 @@ static void sogo_with_bikeshed(SCtx* )
     {
         0,
         {
-            3,
+            -1,
             0
         }
     };
@@ -527,12 +527,12 @@ static void sogo_with_bikeshed(SCtx* )
     {
         0,
         {
-            4,
+            -1,
             0
         },
         1,
         {
-            3,
+            -2,
             1
         }
     };
@@ -594,7 +594,7 @@ static void sogo_with_bikeshed(SCtx* )
     ASSERT_TRUE(sogo::GetGraphSize(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_size));
 
     size_t s = ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) +
-               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) +
+               ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex)) +
                ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1) +
                ALIGN_SIZE(graph_size.m_ContextMemorySize, 1);
     uint8_t* mem = (uint8_t*)malloc(s);
@@ -602,8 +602,8 @@ static void sogo_with_bikeshed(SCtx* )
     sogo::GraphBuffers graph_buffers;
     graph_buffers.m_GraphMem = mem;
     graph_buffers.m_ScratchBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float))];
-    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex))];
-    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerInputIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
+    graph_buffers.m_TriggerBufferMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex))];
+    graph_buffers.m_ContextMem = &mem[ALIGN_SIZE(graph_size.m_GraphSize, sizeof(float)) + ALIGN_SIZE(graph_size.m_ScratchBufferSize, sizeof(sogo::TTriggerSocketIndex)) + ALIGN_SIZE(graph_size.m_TriggerBufferSize, 1)];
 
     sogo::HGraph graph = sogo::CreateGraph(&GRAPH_DESCRIPTION, &GRAPH_RUNTIME_SETTINGS, &graph_buffers);
     TEST_ASSERT_NE(0x0, graph);
