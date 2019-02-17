@@ -97,12 +97,12 @@ static void sogo_simple_graph(SCtx* )
 
     static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS[CONNECTION_COUNT] =
     {
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 1, { -2, 1 } }
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 1, -2, 1 }
     };
 
     const sogo::NodeDescription NODES[NODE_COUNT] =
@@ -219,7 +219,7 @@ static void sogo_merge_graphs(SCtx* )
     static const sogo::TConnectionIndex GENERATOR_CONNECTION_COUNT = 1;
     static const sogo::NodeAudioConnection GENERATOR_CONNECTIONS[GENERATOR_CONNECTION_COUNT] = 
     {
-        { 0, { -1, 0 } }
+        { 0, -1, 0 }
     };
 
     static const sogo::TNodeIndex NODE_COUNT_GENERATOR = 2;
@@ -249,7 +249,7 @@ static void sogo_merge_graphs(SCtx* )
     static const sogo::TConnectionIndex MIXER_CONNECTION_COUNT = 1;
     static const sogo::NodeAudioConnection MIXER_CONNECTIONS[MIXER_CONNECTION_COUNT] = 
     {
-        { 0, { -1, 0 } }
+        { 0, -1, 0 }
     };
 
     static const sogo::TNodeIndex NODE_COUNT_MIXER = 2;
@@ -309,8 +309,8 @@ static void sogo_merge_graphs(SCtx* )
     }
 
     NODES[NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR].m_AudioConnectionCount = 2;
-    CONNECTIONS[connection_index++] = { 0, { -(NODE_COUNT_GENERATOR + 1), 0} };
-    CONNECTIONS[connection_index++] = { 1, { -(1), 0} };
+    CONNECTIONS[connection_index++] = { 0, -(NODE_COUNT_GENERATOR + 1), 0 };
+    CONNECTIONS[connection_index++] = { 1, -(1), 0 };
 
     for (sogo::TConnectionIndex c = 0; c < MIXER_CONNECTION_COUNT; ++c)
     {
@@ -342,24 +342,24 @@ static void sogo_merge_graphs(SCtx* )
     ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[5].m_AudioConnectionCount, 1);
 
     ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_OutputConnection.m_OutputOffset, -1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_OutputConnection.m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_OutputNodeOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_OutputIndex, 0);
 
     ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_OutputConnection.m_OutputOffset, -1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_OutputConnection.m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_OutputNodeOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_OutputIndex, 0);
 
     ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_OutputConnection.m_OutputOffset, -3);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_OutputConnection.m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_OutputNodeOffset, -3);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_OutputIndex, 0);
 
     ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_InputIndex, 1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_OutputConnection.m_OutputOffset, -1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_OutputConnection.m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_OutputNodeOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_OutputIndex, 0);
 
     ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_OutputConnection.m_OutputOffset, -1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_OutputConnection.m_OutputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_OutputNodeOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_OutputIndex, 0);
 }
 
 static void sogo_with_bikeshed(SCtx* )
@@ -389,12 +389,12 @@ static void sogo_with_bikeshed(SCtx* )
 
     static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS[CONNECTION_COUNT] =
     {
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 0, { -1, 0 } },
-        { 1, { -2, 1 } }
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 0, -1, 0 },
+        { 1, -2, 1 }
     };
 
     const sogo::NodeDescription NODES[NODE_COUNT] =
