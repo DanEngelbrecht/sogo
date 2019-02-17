@@ -171,15 +171,15 @@ namespace sogo
     {
         NodeStaticDescription           m_NodeStaticDescription;
         TConnectionIndex                m_AudioConnectionCount;
-        const NodeAudioConnection*      m_AudioConnections;
         TConnectionIndex                m_TriggerConnectionCount;
-        const NodeTriggerConnection*    m_TriggerConnections;
     };
 
     struct GraphDescription
     {
         TNodeIndex                      m_NodeCount;
         const NodeDescription*          m_NodeDescriptions;
+        const NodeAudioConnection*      m_AudioConnections;
+        const NodeTriggerConnection*    m_TriggerConnections;
         AudioOutput**                   m_ExternalAudioInputs;
     };
 

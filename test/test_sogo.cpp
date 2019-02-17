@@ -95,54 +95,14 @@ static void sogo_simple_graph(SCtx* )
 
     static const uint16_t CONNECTION_COUNT = 6;
 
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_1[] =
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS[CONNECTION_COUNT] =
     {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_2[] =
-    {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_3[] =
-    {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_4[] =
-    {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_5[] =
-    {
-        0,
-        {
-            -1,
-            0
-        },
-        1,
-        {
-            -2,
-            1
-        }
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 1, { -2, 1 } }
     };
 
     const sogo::NodeDescription NODES[NODE_COUNT] =
@@ -150,44 +110,32 @@ static void sogo_simple_graph(SCtx* )
         {
             sogo::DCNodeDesc,           // 0.5
             0,
-            0x0,
-            0,
-            0x0
+            0
         },
         {
             sogo::GainNodeDesc,         // 0.5 * 0.5
             1,
-            NODE_AUDIO_CONNECTIONS_1,
-            0,
-            0x0
+            0
         },
         {
             sogo::ToStereoNodeDesc,     // 0.5 * 0.5
             1,
-            NODE_AUDIO_CONNECTIONS_2,
-            0,
-            0x0
+            0
         },
         {
             sogo::SplitNodeDesc,        // 0.5 * 0.5
             1,
-            NODE_AUDIO_CONNECTIONS_3,
-            0,
-            0x0
+            0
         },
         {
             sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
             1,
-            NODE_AUDIO_CONNECTIONS_4,
-            0,
-            0x0
+            0
         },
         {
             sogo::MergeNodeDesc,        // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
             2,
-            NODE_AUDIO_CONNECTIONS_5,
-            0,
-            0x0
+            0
         }
     };
 
@@ -195,6 +143,8 @@ static void sogo_simple_graph(SCtx* )
     {
         NODE_COUNT,
         NODES,
+        NODE_AUDIO_CONNECTIONS,
+        0x0,
         0x0
     };
 
@@ -265,6 +215,7 @@ static void sogo_simple_graph(SCtx* )
 
 static void sogo_merge_graphs(SCtx* )
 {
+#if 0
     // This is nore of an authoring test, checking how easy it is to modify graphs
     static const sogo::TConnectionIndex GENERATOR_GAIN_NODE_CONNECTION_COUNT = 1;
     static const sogo::NodeAudioConnection GENERATOR_GAIN_NODE_CONNECTIONS[GENERATOR_GAIN_NODE_CONNECTION_COUNT] = 
@@ -339,7 +290,6 @@ static void sogo_merge_graphs(SCtx* )
         0x0
     };
 
-#if 0
     // Build graph of two generators going into a mixer
     static const sogo::TNodeIndex NODE_COUNT = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + NODE_COUNT_MIXER;
     sogo::NodeDescription NODES[NODE_COUNT];
@@ -487,54 +437,14 @@ static void sogo_with_bikeshed(SCtx* )
 
     static const uint16_t CONNECTION_COUNT = 6;
 
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_1[] =
+    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS[CONNECTION_COUNT] =
     {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_2[] =
-    {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_3[] =
-    {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_4[] =
-    {
-        0,
-        {
-            -1,
-            0
-        }
-    };
-
-    static const sogo::NodeAudioConnection NODE_AUDIO_CONNECTIONS_5[] =
-    {
-        0,
-        {
-            -1,
-            0
-        },
-        1,
-        {
-            -2,
-            1
-        }
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 0, { -1, 0 } },
+        { 1, { -2, 1 } }
     };
 
     const sogo::NodeDescription NODES[NODE_COUNT] =
@@ -542,44 +452,32 @@ static void sogo_with_bikeshed(SCtx* )
         {
             sogo::DCNodeDesc,           // 0.5
             0,
-            0x0,
-            0,
-            0x0
+            0
         },
         {
             sogo::GainNodeDesc,         // 0.5 * 0.5
             1,
-            NODE_AUDIO_CONNECTIONS_1,
-            0,
-            0x0
+            0
         },
         {
             sogo::ToStereoNodeDesc,     // 0.5 * 0.5
             1,
-            NODE_AUDIO_CONNECTIONS_2,
-            0,
-            0x0
+            0
         },
         {
             sogo::SplitNodeDesc,        // 0.5 * 0.5
             1,
-            NODE_AUDIO_CONNECTIONS_3,
-            0,
-            0x0
+            0
         },
         {
             sogo::GainNodeDesc,         // 0.5 * 0.5 * 2.0
             1,
-            NODE_AUDIO_CONNECTIONS_4,
-            0,
-            0x0
+            0
         },
         {
             sogo::MergeNodeDesc,        // 0.5 * 0.5 * 2.0 + 0.5 * 0.5
             2,
-            NODE_AUDIO_CONNECTIONS_5,
-            0,
-            0x0
+            0
         }
     };
 
@@ -587,6 +485,8 @@ static void sogo_with_bikeshed(SCtx* )
     {
         NODE_COUNT,
         NODES,
+        NODE_AUDIO_CONNECTIONS,
+        0x0,
         0x0
     };
 
