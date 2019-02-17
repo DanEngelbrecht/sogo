@@ -143,28 +143,18 @@ namespace sogo
 
     static const TNodeOffset EXTERNAL_NODE_OFFSET = 0;
 
-    struct NodeAudioOutputConnection
-    {
-        TNodeOffset         m_OutputOffset;
-        TAudioSocketIndex   m_OutputIndex;
-    };
-
     struct NodeAudioConnection
     {
-        TAudioSocketIndex           m_InputIndex;
-        NodeAudioOutputConnection   m_OutputConnection;
-    };
-
-    struct NodeTriggerOutputConnection
-    {
-        TNodeOffset         m_OutputOffset;
-        TTriggerSocketIndex m_OutputTriggerIndex;
+        TAudioSocketIndex   m_InputIndex;
+        TNodeOffset         m_OutputNodeOffset;
+        TAudioSocketIndex   m_OutputIndex;
     };
 
     struct NodeTriggerConnection
     {
-        TTriggerSocketIndex         m_InputTriggerIndex;
-        NodeTriggerOutputConnection m_OutputConnection;
+        TTriggerSocketIndex m_InputTriggerIndex;
+        TNodeOffset         m_OutputNodeOffset;
+        TTriggerSocketIndex m_OutputIndex;
     };
 
     struct NodeDescription
