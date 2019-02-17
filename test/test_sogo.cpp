@@ -215,16 +215,11 @@ static void sogo_simple_graph(SCtx* )
 
 static void sogo_merge_graphs(SCtx* )
 {
-#if 0
     // This is nore of an authoring test, checking how easy it is to modify graphs
-    static const sogo::TConnectionIndex GENERATOR_GAIN_NODE_CONNECTION_COUNT = 1;
-    static const sogo::NodeAudioConnection GENERATOR_GAIN_NODE_CONNECTIONS[GENERATOR_GAIN_NODE_CONNECTION_COUNT] = 
+    static const sogo::TConnectionIndex GENERATOR_CONNECTION_COUNT = 1;
+    static const sogo::NodeAudioConnection GENERATOR_CONNECTIONS[GENERATOR_CONNECTION_COUNT] = 
     {
-        0,
-        {
-            -1,
-            0
-        }
+        { 0, { -1, 0 } }
     };
 
     static const sogo::TNodeIndex NODE_COUNT_GENERATOR = 2;
@@ -233,16 +228,12 @@ static void sogo_merge_graphs(SCtx* )
         {
             sogo::DCNodeDesc,
             0,
-            0x0,
-            0,
-            0x0
+            0
         },
         {
         sogo::GainNodeDesc,
-            GENERATOR_GAIN_NODE_CONNECTION_COUNT,
-            GENERATOR_GAIN_NODE_CONNECTIONS,
-            0,
-            0x0
+            1,
+            0
         }
     };
 
@@ -250,17 +241,15 @@ static void sogo_merge_graphs(SCtx* )
     {
         NODE_COUNT_GENERATOR,
         NODES_GENERATOR,
+        GENERATOR_CONNECTIONS,
+        0x0,
         0x0
     };
 
-    static const sogo::TConnectionIndex MIXER_GAIN_NODE_CONNECTION_COUNT = 1;
-    static const sogo::NodeAudioConnection MIXER_GAIN_NODE_CONNECTIONS[MIXER_GAIN_NODE_CONNECTION_COUNT] = 
+    static const sogo::TConnectionIndex MIXER_CONNECTION_COUNT = 1;
+    static const sogo::NodeAudioConnection MIXER_CONNECTIONS[MIXER_CONNECTION_COUNT] = 
     {
-        0,
-        {
-            -1,
-            0
-        }
+        { 0, { -1, 0 } }
     };
 
     static const sogo::TNodeIndex NODE_COUNT_MIXER = 2;
@@ -269,16 +258,12 @@ static void sogo_merge_graphs(SCtx* )
         {
             sogo::MergeNodeDesc,
             0,
-            0x0,
-            0,
-            0x0
+            0
         },
         {
         sogo::GainNodeDesc,
-            GENERATOR_GAIN_NODE_CONNECTION_COUNT,
-            GENERATOR_GAIN_NODE_CONNECTIONS,
-            0,
-            0x0
+            1,
+            0
         }
     };
 
@@ -287,129 +272,94 @@ static void sogo_merge_graphs(SCtx* )
     {
         NODE_COUNT_MIXER,
         NODES_MIXER,
+        MIXER_CONNECTIONS,
+        0x0,
         0x0
     };
 
     // Build graph of two generators going into a mixer
     static const sogo::TNodeIndex NODE_COUNT = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + NODE_COUNT_MIXER;
     sogo::NodeDescription NODES[NODE_COUNT];
+    static const sogo::TConnectionIndex CONNECTION_COUNT = GENERATOR_CONNECTION_COUNT + GENERATOR_CONNECTION_COUNT + MIXER_CONNECTION_COUNT + 2;
+    sogo::NodeAudioConnection CONNECTIONS[CONNECTION_COUNT]; 
 
     // Merge the three graphs
     sogo::TNodeIndex node_index = 0;
-    sogo::TNodeIndex node_base = 0;
-    sogo::TConnectionIndex connection_index = 0;
 
     for (sogo::TNodeIndex n = 0; n < NODE_COUNT_GENERATOR; ++n)
     {
         NODES[node_index++] = NODES_GENERATOR[n];
     }
-    for (sogo::TConnectionIndex c = 0; c < CONNECTION_COUNT_GENERATOR; ++c)
-    {
-        CONNECTIONS[connection_index].m_InputNodeIndex = CONNECTIONS_GENERATOR[c].m_InputNodeIndex + node_base;
-        CONNECTIONS[connection_index].m_InputIndex = CONNECTIONS_GENERATOR[c].m_InputIndex;
-        CONNECTIONS[connection_index].m_OutputNodeIndex = CONNECTIONS_GENERATOR[c].m_OutputNodeIndex + node_base;
-        CONNECTIONS[connection_index++].m_OutputIndex = CONNECTIONS_GENERATOR[c].m_OutputIndex;
-    }
-    node_base += NODE_COUNT_GENERATOR;
-
     for (sogo::TNodeIndex n = 0; n < NODE_COUNT_GENERATOR; ++n)
     {
         NODES[node_index++] = NODES_GENERATOR[n];
     }
-    for (sogo::TConnectionIndex c = 0; c < CONNECTION_COUNT_GENERATOR; ++c)
-    {
-        CONNECTIONS[connection_index].m_InputNodeIndex = CONNECTIONS_GENERATOR[c].m_InputNodeIndex + node_base;
-        CONNECTIONS[connection_index].m_InputIndex = CONNECTIONS_GENERATOR[c].m_InputIndex;
-        CONNECTIONS[connection_index].m_OutputNodeIndex = CONNECTIONS_GENERATOR[c].m_OutputNodeIndex + node_base;
-        CONNECTIONS[connection_index++].m_OutputIndex = CONNECTIONS_GENERATOR[c].m_OutputIndex;
-    }
-    node_base += NODE_COUNT_GENERATOR;
-
     for (sogo::TNodeIndex n = 0; n < NODE_COUNT_MIXER; ++n)
     {
         NODES[node_index++] = NODES_MIXER[n];
     }
-    for (sogo::TConnectionIndex c = 0; c < CONNECTION_COUNT_MIXER; ++c)
+    sogo::TConnectionIndex connection_index = 0;
+    for (sogo::TConnectionIndex c = 0; c < GENERATOR_CONNECTION_COUNT; ++c)
     {
-        CONNECTIONS[connection_index].m_InputNodeIndex = CONNECTIONS_MIXER[c].m_InputNodeIndex + node_base;
-        CONNECTIONS[connection_index].m_InputIndex = CONNECTIONS_MIXER[c].m_InputIndex;
-        CONNECTIONS[connection_index].m_OutputNodeIndex = CONNECTIONS_MIXER[c].m_OutputNodeIndex + node_base;
-        CONNECTIONS[connection_index++].m_OutputIndex = CONNECTIONS_MIXER[c].m_OutputIndex;
+        CONNECTIONS[connection_index++] = GENERATOR_CONNECTIONS[c];
+    }
+    for (sogo::TConnectionIndex c = 0; c < GENERATOR_CONNECTION_COUNT; ++c)
+    {
+        CONNECTIONS[connection_index++] = GENERATOR_CONNECTIONS[c];
     }
 
-    // Hook up the three graphs
-    CONNECTIONS[connection_index].m_InputNodeIndex = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + 0;
-    CONNECTIONS[connection_index].m_InputIndex = 0;
-    CONNECTIONS[connection_index].m_OutputNodeIndex = 1;
-    CONNECTIONS[connection_index++].m_OutputIndex = 0;
+    NODES[NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR].m_AudioConnectionCount = 2;
+    CONNECTIONS[connection_index++] = { 0, { -(NODE_COUNT_GENERATOR + 1), 0} };
+    CONNECTIONS[connection_index++] = { 1, { -(1), 0} };
 
-    CONNECTIONS[connection_index].m_InputNodeIndex = NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + 0;
-    CONNECTIONS[connection_index].m_InputIndex = 1;
-    CONNECTIONS[connection_index].m_OutputNodeIndex = NODE_COUNT_GENERATOR + 1;
-    CONNECTIONS[connection_index++].m_OutputIndex = 0;
-
-    static const sogo::TNodeIndex REMOVE_START_INDEX = NODE_COUNT_GENERATOR;
-    for (sogo::TNodeIndex n = REMOVE_START_INDEX; n < node_index - NODE_COUNT_GENERATOR; ++n)
+    for (sogo::TConnectionIndex c = 0; c < MIXER_CONNECTION_COUNT; ++c)
     {
-        NODES[n] = NODES[n + NODE_COUNT_GENERATOR];
-    }
-    sogo::TConnectionIndex w = 0;
-    sogo::TConnectionIndex r = 0;
-    while (r < connection_index)
-    {
-        if ((CONNECTIONS[r].m_InputNodeIndex >= REMOVE_START_INDEX && CONNECTIONS[r].m_InputNodeIndex < REMOVE_START_INDEX + NODE_COUNT_GENERATOR) ||
-            (CONNECTIONS[r].m_OutputNodeIndex >= REMOVE_START_INDEX && CONNECTIONS[r].m_OutputNodeIndex < REMOVE_START_INDEX + NODE_COUNT_GENERATOR))
-        {
-            ++r;
-            continue;
-        }
-        CONNECTIONS[w] = CONNECTIONS[r];
-        if (CONNECTIONS[w].m_InputNodeIndex >= REMOVE_START_INDEX + NODE_COUNT_GENERATOR)
-        {
-            CONNECTIONS[w].m_InputNodeIndex -= NODE_COUNT_GENERATOR;
-        }
-        if (CONNECTIONS[w].m_OutputNodeIndex >= REMOVE_START_INDEX + NODE_COUNT_GENERATOR)
-        {
-            CONNECTIONS[w].m_OutputNodeIndex -= NODE_COUNT_GENERATOR;
-        }
-        ++w;
-        ++r;
+        CONNECTIONS[connection_index++] = MIXER_CONNECTIONS[c];
     }
 
-    node_index -= NODE_COUNT_GENERATOR;
-    connection_index = w;
-
-    sogo::GraphDescription GRAPH_DESCRIPTION =
+    const sogo::GraphDescription GRAPH_DESCRIPTION = 
     {
         node_index,
         NODES,
-        connection_index,
         CONNECTIONS,
         0x0,
-        0,
         0x0
     };
 
-    ASSERT_EQ((NODE_COUNT_GENERATOR + NODE_COUNT_MIXER), GRAPH_DESCRIPTION.m_NodeCount);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[0], sogo::DCNodeDesc);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[1], sogo::GainNodeDesc);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[2], sogo::MergeNodeDesc);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescCallbacks[3], sogo::GainNodeDesc);
+    ASSERT_EQ((NODE_COUNT_GENERATOR + NODE_COUNT_GENERATOR + NODE_COUNT_MIXER), GRAPH_DESCRIPTION.m_NodeCount);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[0].m_NodeStaticDescription.m_GetNodeRuntimeDescCallback, sogo::DCNodeDesc.m_GetNodeRuntimeDescCallback);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[1].m_NodeStaticDescription.m_GetNodeRuntimeDescCallback, sogo::GainNodeDesc.m_GetNodeRuntimeDescCallback);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[2].m_NodeStaticDescription.m_GetNodeRuntimeDescCallback, sogo::DCNodeDesc.m_GetNodeRuntimeDescCallback);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[3].m_NodeStaticDescription.m_GetNodeRuntimeDescCallback, sogo::GainNodeDesc.m_GetNodeRuntimeDescCallback);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[4].m_NodeStaticDescription.m_GetNodeRuntimeDescCallback, sogo::MergeNodeDesc.m_GetNodeRuntimeDescCallback);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[5].m_NodeStaticDescription.m_GetNodeRuntimeDescCallback, sogo::GainNodeDesc.m_GetNodeRuntimeDescCallback);
 
-    ASSERT_EQ(CONNECTION_COUNT_GENERATOR + CONNECTION_COUNT_MIXER + 1, GRAPH_DESCRIPTION.m_AudioConnectionCount);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_InputNodeIndex, 1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_OutputNodeIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[0].m_OutputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_InputNodeIndex, 3);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_OutputNodeIndex, 2);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[1].m_OutputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_InputNodeIndex, 2);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_InputIndex, 0);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputNodeIndex, 1);
-    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeAudioConnections[2].m_OutputIndex, 0);
-#endif
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[0].m_AudioConnectionCount, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[1].m_AudioConnectionCount, 1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[2].m_AudioConnectionCount, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[3].m_AudioConnectionCount, 1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[4].m_AudioConnectionCount, 2);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_NodeDescriptions[5].m_AudioConnectionCount, 1);
+
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_OutputConnection.m_OutputOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[0].m_OutputConnection.m_OutputIndex, 0);
+
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_OutputConnection.m_OutputOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[1].m_OutputConnection.m_OutputIndex, 0);
+
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_OutputConnection.m_OutputOffset, -3);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[2].m_OutputConnection.m_OutputIndex, 0);
+
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_InputIndex, 1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_OutputConnection.m_OutputOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[3].m_OutputConnection.m_OutputIndex, 0);
+
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_InputIndex, 0);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_OutputConnection.m_OutputOffset, -1);
+    ASSERT_EQ(GRAPH_DESCRIPTION.m_AudioConnections[4].m_OutputConnection.m_OutputIndex, 0);
 }
 
 static void sogo_with_bikeshed(SCtx* )
