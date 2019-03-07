@@ -49,8 +49,8 @@ static void RenderSplit(HGraph graph, HNode node, const RenderParameters* render
     }
     render_parameters->m_AudioOutputs[1].m_Buffer = render_parameters->m_AllocateAudioBuffer(graph, node, input_data->m_ChannelCount, render_parameters->m_FrameCount);
 
-    const float* output1 = input_data->m_Buffer;
-    float* output2 = render_parameters->m_AudioOutputs[1].m_Buffer;
+    const float* output1      = input_data->m_Buffer;
+    float*       output2      = render_parameters->m_AudioOutputs[1].m_Buffer;
     TSampleIndex sample_count = render_parameters->m_FrameCount * input_data->m_ChannelCount;
     while (sample_count--)
     {
@@ -58,24 +58,22 @@ static void RenderSplit(HGraph graph, HNode node, const RenderParameters* render
     }
 
     render_parameters->m_AudioOutputs[0].m_Buffer = input_data->m_Buffer;
-    input_data->m_Buffer = 0x0;
+    input_data->m_Buffer                          = 0x0;
 }
 
-static struct AudioOutputDescription SplitNodeAudioOutputDescriptions[SOGO_SPLIT_AUDIO_OUTPUT_COUNT] =
-{
-    {AudioOutputDescription::PASS_THROUGH, {0}},
-    {AudioOutputDescription::AS_INPUT, {0}}
+static struct AudioOutputDescription SplitNodeAudioOutputDescriptions[SOGO_SPLIT_AUDIO_OUTPUT_COUNT] = {
+    { AudioOutputDescription::PASS_THROUGH, { 0 } },
+    { AudioOutputDescription::AS_INPUT, { 0 } }
 };
 
-static void SplitNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
+static void SplitNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings*, NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_runtime_desc->m_InitCallback = 0;
-    out_node_runtime_desc->m_RenderCallback = RenderSplit;
+    out_node_runtime_desc->m_InitCallback      = 0;
+    out_node_runtime_desc->m_RenderCallback    = RenderSplit;
     out_node_runtime_desc->m_ContextMemorySize = 0;
 }
 
-const NodeStaticDescription SplitNodeDesc =
-{
+const NodeStaticDescription SplitNodeDesc = {
     SplitNodeGetNodeRuntimeDescCallback,
     0x0,
     SplitNodeAudioOutputDescriptions,
@@ -87,7 +85,6 @@ const NodeStaticDescription SplitNodeDesc =
     SOGO_SPLIT_TRIGGER_INPUT_COUNT,
     SOGO_SPLIT_TRIGGER_OUTPUT_COUNT
 };
-
 
 ///////////////////// SOGO MERGE
 
@@ -138,7 +135,7 @@ static bool RenderMerge(TFrameIndex frame_count, AudioOutput* input_data_1, Audi
     return true;
 }
 
-static void RenderMerge(HGraph , HNode , const RenderParameters* render_parameters)
+static void RenderMerge(HGraph, HNode, const RenderParameters* render_parameters)
 {
     if (render_parameters->m_AudioInputs[0].m_AudioOutput->m_Buffer == 0x0)
     {
@@ -149,14 +146,14 @@ static void RenderMerge(HGraph , HNode , const RenderParameters* render_paramete
         }
         else
         {
-            render_parameters->m_AudioOutputs[0].m_Buffer = render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer;
+            render_parameters->m_AudioOutputs[0].m_Buffer               = render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer;
             render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer = 0x0;
             return;
         }
     }
     else if (render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer == 0x0)
     {
-        render_parameters->m_AudioOutputs[0].m_Buffer = render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer;
+        render_parameters->m_AudioOutputs[0].m_Buffer               = render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer;
         render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer = 0x0;
         return;
     }
@@ -166,24 +163,22 @@ static void RenderMerge(HGraph , HNode , const RenderParameters* render_paramete
         render_parameters->m_AudioOutputs[0].m_Buffer = 0x0;
         return;
     }
-    render_parameters->m_AudioOutputs[0].m_Buffer = render_parameters->m_AudioInputs[0].m_AudioOutput->m_Buffer;
+    render_parameters->m_AudioOutputs[0].m_Buffer               = render_parameters->m_AudioInputs[0].m_AudioOutput->m_Buffer;
     render_parameters->m_AudioInputs[1].m_AudioOutput->m_Buffer = 0x0;
 }
 
-static struct AudioOutputDescription MergeNodeAudioOutputDescriptions[SOGO_MERGE_AUDIO_OUTPUT_COUNT] =
-{
-    {AudioOutputDescription::PASS_THROUGH, {0}}
+static struct AudioOutputDescription MergeNodeAudioOutputDescriptions[SOGO_MERGE_AUDIO_OUTPUT_COUNT] = {
+    { AudioOutputDescription::PASS_THROUGH, { 0 } }
 };
 
-static void MergeNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
+static void MergeNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings*, NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_runtime_desc->m_InitCallback = 0;
-    out_node_runtime_desc->m_RenderCallback = RenderMerge;
+    out_node_runtime_desc->m_InitCallback      = 0;
+    out_node_runtime_desc->m_RenderCallback    = RenderMerge;
     out_node_runtime_desc->m_ContextMemorySize = 0;
 }
 
-const NodeStaticDescription MergeNodeDesc =
-{
+const NodeStaticDescription MergeNodeDesc = {
     MergeNodeGetNodeRuntimeDescCallback,
     0x0,
     MergeNodeAudioOutputDescriptions,
@@ -293,9 +288,9 @@ static bool RenderGain(TFrameIndex frame_count, AudioOutput* output_data, float 
         return GainFlat(output_data->m_Buffer, output_data->m_ChannelCount, frame_count, gain);
     }
 
-    TFrameIndex step_count = (TFrameIndex)(floor(fabs(gain - filtered_gain) / max_gain_step_per_frame));
+    TFrameIndex step_count  = (TFrameIndex)(floor(fabs(gain - filtered_gain) / max_gain_step_per_frame));
     TFrameIndex ramp_frames = (step_count < frame_count) ? step_count : frame_count;
-    float gain_step = gain > filtered_gain ? max_gain_step_per_frame : -max_gain_step_per_frame;
+    float       gain_step   = gain > filtered_gain ? max_gain_step_per_frame : -max_gain_step_per_frame;
 
     if (!GainRamp(output_data->m_Buffer, output_data->m_ChannelCount, ramp_frames, filtered_gain, gain_step))
     {
@@ -305,27 +300,27 @@ static bool RenderGain(TFrameIndex frame_count, AudioOutput* output_data, float 
     return GainFlat(&output_data->m_Buffer[output_data->m_ChannelCount * ramp_frames], output_data->m_ChannelCount, frame_count - ramp_frames, gain);
 }
 
-static void RenderGain(HGraph , HNode , const RenderParameters* render_parameters)
+static void RenderGain(HGraph, HNode, const RenderParameters* render_parameters)
 {
-    AudioOutput* input_data = render_parameters->m_AudioInputs[SOGO_GAIN_AUDIO_INPUT].m_AudioOutput;
-    float gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_GAIN_INDEX].m_Float;
-    float filtered_gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX].m_Float;
+    AudioOutput* input_data    = render_parameters->m_AudioInputs[SOGO_GAIN_AUDIO_INPUT].m_AudioOutput;
+    float        gain          = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_GAIN_INDEX].m_Float;
+    float        filtered_gain = render_parameters->m_Parameters[SOGO_GAIN_PARAMETER_FILTERED_GAIN_INDEX].m_Float;
     if (input_data->m_Buffer == 0x0)
     {
         // TODO: Hmm, we still want to filter the gain, or can we just hack it and set filtered_gain to gain?
         // Assuming each render call has enough frames, yes, otherwise no. Hack it for now.
-        filtered_gain = gain;
+        filtered_gain                                 = gain;
         render_parameters->m_AudioOutputs[0].m_Buffer = 0x0;
         return;
     }
 
     render_parameters->m_AudioOutputs[SOGO_GAIN_AUDIO_OUTPUT].m_Buffer = input_data->m_Buffer;
-    input_data->m_Buffer = 0x0;
+    input_data->m_Buffer                                               = 0x0;
     if (!RenderGain(render_parameters->m_FrameCount, &render_parameters->m_AudioOutputs[SOGO_GAIN_AUDIO_OUTPUT], gain, filtered_gain))
     {
         // TODO: Hmm, we still want to filter the gain, or can we just hack it and set filtered_gain to gain?
         // Assuming each render call has enough frames, yes, otherwise no. Hack it for now.
-        filtered_gain = gain;
+        filtered_gain                                 = gain;
         render_parameters->m_AudioOutputs[0].m_Buffer = 0x0;
         return;
     }
@@ -333,24 +328,22 @@ static void RenderGain(HGraph , HNode , const RenderParameters* render_parameter
 }
 
 static const ParameterDescription GainParameters[SOGO_GAIN_PARAMETER_COUNT] = {
-    {"Gain", 1.f},
-    {0x0, 1.f}
+    { "Gain", 1.f },
+    { 0x0, 1.f }
 };
 
-static struct AudioOutputDescription GainNodeAudioOutputDescriptions[SOGO_GAIN_AUDIO_OUTPUT_COUNT] =
-{
-    {AudioOutputDescription::PASS_THROUGH, {0}}
+static struct AudioOutputDescription GainNodeAudioOutputDescriptions[SOGO_GAIN_AUDIO_OUTPUT_COUNT] = {
+    { AudioOutputDescription::PASS_THROUGH, { 0 } }
 };
 
-static void GainNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
+static void GainNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings*, NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_runtime_desc->m_InitCallback = 0;
-    out_node_runtime_desc->m_RenderCallback = RenderGain;
+    out_node_runtime_desc->m_InitCallback      = 0;
+    out_node_runtime_desc->m_RenderCallback    = RenderGain;
     out_node_runtime_desc->m_ContextMemorySize = 0;
 }
 
-const NodeStaticDescription GainNodeDesc =
-{
+const NodeStaticDescription GainNodeDesc = {
     GainNodeGetNodeRuntimeDescCallback,
     GainParameters,
     GainNodeAudioOutputDescriptions,
@@ -362,7 +355,6 @@ const NodeStaticDescription GainNodeDesc =
     SOGO_GAIN_TRIGGER_INPUT_COUNT,
     SOGO_GAIN_TRIGGER_OUTPUT_COUNT
 };
-
 
 ///////////////////// SOGO SINE
 
@@ -404,18 +396,18 @@ enum SOGO_SINE_AUDIO_OUTPUTS
 
 static void RenderSine(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
-    float frequency = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FREQUENCY_INDEX].m_Float;
+    float frequency          = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FREQUENCY_INDEX].m_Float;
     float filtered_frequency = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_FREQUENCY_INDEX].m_Float;
-    float value = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX].m_Float;
+    float value              = render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX].m_Float;
 
-    filtered_frequency = ((frequency * 15) + filtered_frequency) / 16;
-    float step = ((2.f * 3.141592654f) * filtered_frequency) / render_parameters->m_FrameRate;
-    TFrameIndex frame_count = render_parameters->m_FrameCount;
+    filtered_frequency                            = ((frequency * 15) + filtered_frequency) / 16;
+    float       step                              = ((2.f * 3.141592654f) * filtered_frequency) / render_parameters->m_FrameRate;
+    TFrameIndex frame_count                       = render_parameters->m_FrameCount;
     render_parameters->m_AudioOutputs[0].m_Buffer = render_parameters->m_AllocateAudioBuffer(graph, node, 1, frame_count);
-    float* io_buffer = render_parameters->m_AudioOutputs[0].m_Buffer;
+    float* io_buffer                              = render_parameters->m_AudioOutputs[0].m_Buffer;
     while (frame_count--)
     {
-        float frame = sinf(value);
+        float frame  = sinf(value);
         *io_buffer++ = frame;
         value += step;
         if (value > (2.f * 3.141592654f))
@@ -424,34 +416,32 @@ static void RenderSine(HGraph graph, HNode node, const RenderParameters* render_
         }
     }
     render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_FREQUENCY_INDEX].m_Float = filtered_frequency;
-    render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX].m_Float = value;
+    render_parameters->m_Parameters[SOGO_SINE_PARAMETER_FILTERED_VALUE_INDEX].m_Float     = value;
 }
 
 static const ParameterDescription SineParameters[SOGO_SINE_PARAMETER_COUNT] = {
-    {"Frequency", 4000.0f},
-    {0x0, 4000.0f},
-    {0x0, 0.0f}
+    { "Frequency", 4000.0f },
+    { 0x0, 4000.0f },
+    { 0x0, 0.0f }
 };
 
 static const TriggerDescription SineTriggers[SOGO_SINE_TRIGGER_INPUT_COUNT] = {
-    {"Start"},
-    {"Stop"}
+    { "Start" },
+    { "Stop" }
 };
 
-static struct AudioOutputDescription SineNodeAudioOutputDescriptions[SOGO_SINE_AUDIO_OUTPUT_COUNT] =
-{
-    {AudioOutputDescription::FIXED, {1}}
+static struct AudioOutputDescription SineNodeAudioOutputDescriptions[SOGO_SINE_AUDIO_OUTPUT_COUNT] = {
+    { AudioOutputDescription::FIXED, { 1 } }
 };
 
-static void SineNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
+static void SineNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings*, NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_runtime_desc->m_InitCallback = 0;
-    out_node_runtime_desc->m_RenderCallback = RenderSine;
+    out_node_runtime_desc->m_InitCallback      = 0;
+    out_node_runtime_desc->m_RenderCallback    = RenderSine;
     out_node_runtime_desc->m_ContextMemorySize = 0;
 }
 
-const NodeStaticDescription SineNodeDesc =
-{
+const NodeStaticDescription SineNodeDesc = {
     SineNodeGetNodeRuntimeDescCallback,
     SineParameters,
     SineNodeAudioOutputDescriptions,
@@ -463,7 +453,6 @@ const NodeStaticDescription SineNodeDesc =
     SOGO_SINE_TRIGGER_INPUT_COUNT,
     SOGO_SINE_TRIGGER_OUTPUT_COUNT
 };
-
 
 ///////////////////// SOGO MAKE_STEREO
 
@@ -499,7 +488,6 @@ enum SOGO_TOSTEREO_AUDIO_OUTPUTS
     SOGO_TOSTEREO_AUDIO_OUTPUT_COUNT
 };
 
-
 static void RenderToStereo(HGraph graph, HNode node, const RenderParameters* render_parameters)
 {
     AudioOutput* input_data = render_parameters->m_AudioInputs[SOGO_TOSTEREO_AUDIO_INPUT].m_AudioOutput;
@@ -510,9 +498,9 @@ static void RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     }
     if (input_data->m_ChannelCount == 2)
     {
-        render_parameters->m_AudioOutputs[SOGO_TOSTEREO_AUDIO_OUTPUT].m_Buffer = input_data->m_Buffer;
+        render_parameters->m_AudioOutputs[SOGO_TOSTEREO_AUDIO_OUTPUT].m_Buffer       = input_data->m_Buffer;
         render_parameters->m_AudioOutputs[SOGO_TOSTEREO_AUDIO_OUTPUT].m_ChannelCount = input_data->m_ChannelCount;
-        input_data->m_Buffer = 0x0;
+        input_data->m_Buffer                                                         = 0x0;
         return;
     }
     if (input_data->m_ChannelCount != 1)
@@ -523,10 +511,10 @@ static void RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
 
     float* mono_input = input_data->m_Buffer;
 
-    TFrameIndex frame_count = render_parameters->m_FrameCount;
-    float* stereo_output = render_parameters->m_AllocateAudioBuffer(graph, node, 2, frame_count);
+    TFrameIndex frame_count   = render_parameters->m_FrameCount;
+    float*      stereo_output = render_parameters->m_AllocateAudioBuffer(graph, node, 2, frame_count);
 
-    render_parameters->m_AudioOutputs[SOGO_TOSTEREO_AUDIO_OUTPUT].m_Buffer = stereo_output;
+    render_parameters->m_AudioOutputs[SOGO_TOSTEREO_AUDIO_OUTPUT].m_Buffer       = stereo_output;
     render_parameters->m_AudioOutputs[SOGO_TOSTEREO_AUDIO_OUTPUT].m_ChannelCount = 2;
 
     while (frame_count--)
@@ -536,21 +524,18 @@ static void RenderToStereo(HGraph graph, HNode node, const RenderParameters* ren
     }
 }
 
-static struct AudioOutputDescription ToStereoNodeAudioOutputDescriptions[SOGO_TOSTEREO_AUDIO_OUTPUT_COUNT] =
-{
-    {AudioOutputDescription::FIXED, {2}}
+static struct AudioOutputDescription ToStereoNodeAudioOutputDescriptions[SOGO_TOSTEREO_AUDIO_OUTPUT_COUNT] = {
+    { AudioOutputDescription::FIXED, { 2 } }
 };
 
-static void ToStereoNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
+static void ToStereoNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings*, NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_runtime_desc->m_InitCallback = 0;
-    out_node_runtime_desc->m_RenderCallback = RenderToStereo;
+    out_node_runtime_desc->m_InitCallback      = 0;
+    out_node_runtime_desc->m_RenderCallback    = RenderToStereo;
     out_node_runtime_desc->m_ContextMemorySize = 0;
 }
 
-
-const NodeStaticDescription ToStereoNodeDesc =
-{
+const NodeStaticDescription ToStereoNodeDesc = {
     ToStereoNodeGetNodeRuntimeDescCallback,
     0x0,
     ToStereoNodeAudioOutputDescriptions,
@@ -562,8 +547,6 @@ const NodeStaticDescription ToStereoNodeDesc =
     SOGO_TOSTEREO_TRIGGER_INPUT_COUNT,
     SOGO_TOSTEREO_TRIGGER_OUTPUT_COUNT
 };
-
-
 
 ///////////////////// SOGO DC
 
@@ -603,9 +586,9 @@ static void RenderDC(HGraph graph, HNode node, const RenderParameters* render_pa
 {
     float level = render_parameters->m_Parameters[SOGO_DC_PARAMETER_LEVEL_INDEX].m_Float;
 
-    uint32_t frame_count = render_parameters->m_FrameCount;
+    uint32_t frame_count                          = render_parameters->m_FrameCount;
     render_parameters->m_AudioOutputs[0].m_Buffer = render_parameters->m_AllocateAudioBuffer(graph, node, 1, frame_count);
-    float* io_buffer = render_parameters->m_AudioOutputs[SOGO_DC_AUDIO_OUTPUT].m_Buffer;
+    float* io_buffer                              = render_parameters->m_AudioOutputs[SOGO_DC_AUDIO_OUTPUT].m_Buffer;
     while (frame_count--)
     {
         *io_buffer++ = level;
@@ -613,23 +596,21 @@ static void RenderDC(HGraph graph, HNode node, const RenderParameters* render_pa
 }
 
 static const ParameterDescription DCParameters[SOGO_DC_PARAMETER_COUNT] = {
-    {"Level", 1.0f}
+    { "Level", 1.0f }
 };
 
-static struct AudioOutputDescription DCNodeAudioOutputDescriptions[SOGO_DC_AUDIO_OUTPUT_COUNT] =
-{
-    {AudioOutputDescription::FIXED, {1}}
+static struct AudioOutputDescription DCNodeAudioOutputDescriptions[SOGO_DC_AUDIO_OUTPUT_COUNT] = {
+    { AudioOutputDescription::FIXED, { 1 } }
 };
 
-static void DCNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings* , NodeRuntimeDescription* out_node_runtime_desc)
+static void DCNodeGetNodeRuntimeDescCallback(const GraphRuntimeSettings*, NodeRuntimeDescription* out_node_runtime_desc)
 {
-    out_node_runtime_desc->m_InitCallback = 0;
-    out_node_runtime_desc->m_RenderCallback = RenderDC;
+    out_node_runtime_desc->m_InitCallback      = 0;
+    out_node_runtime_desc->m_RenderCallback    = RenderDC;
     out_node_runtime_desc->m_ContextMemorySize = 0;
 }
 
-const NodeStaticDescription DCNodeDesc =
-{
+const NodeStaticDescription DCNodeDesc = {
     DCNodeGetNodeRuntimeDescCallback,
     DCParameters,
     DCNodeAudioOutputDescriptions,
@@ -641,7 +622,6 @@ const NodeStaticDescription DCNodeDesc =
     SOGO_DC_TRIGGER_INPUT_COUNT,
     SOGO_DC_TRIGGER_OUTPUT_COUNT
 };
-
 
 #if 0
 
@@ -685,4 +665,4 @@ const NodeDescription SequentialTriggerDescription =
 
 #endif
 
-}
+} // namespace sogo
