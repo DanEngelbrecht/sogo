@@ -190,10 +190,6 @@ struct GraphBuffers
     void* m_ContextMem;       // No need to align,
 };
 
-bool         GetGraphSize(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, GraphSize* out_graph_size);
-HGraph       CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
-AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioSocketIndex output_index);
-
 struct RenderJob
 {
     RenderParameters m_RenderParameters;
@@ -204,12 +200,13 @@ struct RenderJob
     TNodeIndex*      m_Dependencies;
 };
 
-void GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs);
-
-bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value);
-bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerSocketIndex trigger_index);
-bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource);
-
+bool         GetGraphSize(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, GraphSize* out_graph_size);
+HGraph       CreateGraph(const GraphDescription* graph_description, const GraphRuntimeSettings* graph_runtime_settings, const GraphBuffers* graph_buffers);
+AudioOutput* GetOutput(HGraph graph, TNodeIndex node_index, TAudioSocketIndex output_index);
+void         GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs);
+bool         SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter_index, TParameter value);
+bool         Trigger(HGraph graph, TNodeIndex node_index, TTriggerSocketIndex trigger_index);
+bool         SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource);
 void         RenderGraph(HGraph graph, TFrameIndex frame_count);
 AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioSocketIndex output_index);
 
