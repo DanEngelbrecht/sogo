@@ -3,17 +3,16 @@
 #include <string.h>
 
 #ifdef _MSC_VER
-    #include <malloc.h>
-    #undef alloca
-    #define alloca _malloca
+#    include <malloc.h>
+#    undef alloca
+#    define alloca _malloca
 #else
-    #include <alloca.h>
+#    include <alloca.h>
 #endif
 
-#define ALIGN_SIZE(x, align)    (((x) + ((align) - 1)) & ~((align) - 1))
+#define ALIGN_SIZE(x, align) (((x) + ((align)-1)) & ~((align)-1))
 
-namespace sogo
-{
+namespace sogo {
 
 typedef uint16_t TParameterOffset;
 typedef uint16_t TTriggerOffset;
@@ -24,46 +23,47 @@ typedef uint32_t TContextMemoryOffset;
 
 struct Node
 {
-    RenderCallback          m_Render;
-    TParameterOffset        m_ParametersOffset;
-    TAudioInputOffset       m_AudioInputsOffset;
-    TAudioOutputOffset      m_AudioOutputsOffset;
-    TResourceOffset         m_ResourcesOffset;
-    TTriggerOffset          m_TriggerInputOffset;
-    TTriggerOffset          m_TriggerOutputOffset;
-    TNodeIndex              m_DependencyCount;
-    TNodeIndex              m_DependencyOffset;
-    TContextMemoryOffset    m_ContextMemoryOffset;
+    RenderCallback       m_Render;
+    TParameterOffset     m_ParametersOffset;
+    TAudioInputOffset    m_AudioInputsOffset;
+    TAudioOutputOffset   m_AudioOutputsOffset;
+    TResourceOffset      m_ResourcesOffset;
+    TTriggerOffset       m_TriggerInputOffset;
+    TTriggerOffset       m_TriggerOutputOffset;
+    TNodeIndex           m_DependencyCount;
+    TNodeIndex           m_DependencyOffset;
+    TContextMemoryOffset m_ContextMemoryOffset;
 };
 
-struct Graph {
-    TParameter*         m_Parameters;
-    Resource*           m_Resources;
-    TTriggerCount       m_MaxTriggerEventCount;
+struct Graph
+{
+    TParameter*          m_Parameters;
+    Resource*            m_Resources;
+    TTriggerCount        m_MaxTriggerEventCount;
     TTriggerSocketIndex* m_Triggers;
-    TNodeIndex          m_NodeCount;
-    Node*               m_Nodes;
-    uint32_t            m_ScratchBufferSize;
-    float*              m_ScratchBuffer;
-    uint32_t            m_ScratchUsedCount;
-    uint8_t*            m_ContextMemory;
-    TFrameRate          m_FrameRate;
-    AudioOutput*        m_AudioOutputs;
-    AudioInput*         m_AudioInputs;
-    TriggerInput*       m_TriggerInputs;
-    TriggerOutput*      m_TriggerOutputs;
-    TNodeIndex*         m_Dependencies;
+    TNodeIndex           m_NodeCount;
+    Node*                m_Nodes;
+    uint32_t             m_ScratchBufferSize;
+    float*               m_ScratchBuffer;
+    uint32_t             m_ScratchUsedCount;
+    uint8_t*             m_ContextMemory;
+    TFrameRate           m_FrameRate;
+    AudioOutput*         m_AudioOutputs;
+    AudioInput*          m_AudioInputs;
+    TriggerInput*        m_TriggerInputs;
+    TriggerOutput*       m_TriggerOutputs;
+    TNodeIndex*          m_Dependencies;
 };
 
 static bool GetOutputChannelCount(
-    const GraphDescription* graph_description,
-    const GraphRuntimeSettings* graph_runtime_settings,
-    TNodeIndex node_index,
-    const NodeAudioConnection** audio_connections,
-    TAudioSocketIndex output_index,
-    TChannelIndex* out_channel_count)
+const GraphDescription*     graph_description,
+const GraphRuntimeSettings* graph_runtime_settings,
+TNodeIndex                  node_index,
+const NodeAudioConnection** audio_connections,
+TAudioSocketIndex           output_index,
+TChannelIndex*              out_channel_count)
 {
-    const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
+    const NodeDescription&        node_description   = graph_description->m_NodeDescriptions[node_index];
     const AudioOutputDescription* output_description = &node_description.m_NodeStaticDescription.m_AudioOutputDescriptions[output_index];
     switch (output_description->m_Mode)
     {
@@ -84,12 +84,12 @@ static bool GetOutputChannelCount(
                         return true;
                     }
                     return GetOutputChannelCount(
-                        graph_description,
-                        graph_runtime_settings,
-                        (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset),
-                        audio_connections,
-                        node_connection->m_OutputIndex,
-                        out_channel_count);
+                    graph_description,
+                    graph_runtime_settings,
+                    (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset),
+                    audio_connections,
+                    node_connection->m_OutputIndex,
+                    out_channel_count);
                 }
             }
             return false;
@@ -100,14 +100,14 @@ static bool GetOutputChannelCount(
 }
 
 static bool GetOutputChannelAllocationCount(
-    const GraphDescription* graph_description,
-    const GraphRuntimeSettings* graph_runtime_settings,
-    TNodeIndex node_index,
-    const NodeAudioConnection** audio_connections,
-    TAudioSocketIndex output_index,
-    TChannelIndex* out_channel_count)
+const GraphDescription*     graph_description,
+const GraphRuntimeSettings* graph_runtime_settings,
+TNodeIndex                  node_index,
+const NodeAudioConnection** audio_connections,
+TAudioSocketIndex           output_index,
+TChannelIndex*              out_channel_count)
 {
-    const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
+    const NodeDescription&        node_description   = graph_description->m_NodeDescriptions[node_index];
     const AudioOutputDescription* output_description = &node_description.m_NodeStaticDescription.m_AudioOutputDescriptions[output_index];
     switch (output_description->m_Mode)
     {
@@ -125,12 +125,12 @@ static bool GetOutputChannelAllocationCount(
                 if (node_connection->m_InputIndex == output_description->m_InputIndex)
                 {
                     return GetOutputChannelCount(
-                        graph_description,
-                        graph_runtime_settings,
-                        (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset),
-                        audio_connections,
-                        node_connection->m_OutputIndex,
-                        out_channel_count);
+                    graph_description,
+                    graph_runtime_settings,
+                    (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset),
+                    audio_connections,
+                    node_connection->m_OutputIndex,
+                    out_channel_count);
                 }
             }
             return false;
@@ -141,11 +141,11 @@ static bool GetOutputChannelAllocationCount(
 }
 
 static TNodeIndex GetDependencies(
-    TNodeIndex node_index,
-    const NodeDescription* node_description,
-    const NodeAudioConnection* const * audio_connections,
-    const NodeTriggerConnection*  const* trigger_connections,
-    TNodeIndex* out_dependecies)
+TNodeIndex                          node_index,
+const NodeDescription*              node_description,
+const NodeAudioConnection* const*   audio_connections,
+const NodeTriggerConnection* const* trigger_connections,
+TNodeIndex*                         out_dependecies)
 {
     TConnectionIndex connection_count = node_description->m_AudioConnectionCount + node_description->m_TriggerConnectionCount;
     if (connection_count == 0)
@@ -153,7 +153,7 @@ static TNodeIndex GetDependencies(
         return 0;
     }
 
-    TNodeIndex* dependencies = out_dependecies ? out_dependecies : (TNodeIndex*)alloca(sizeof(TNodeIndex) * connection_count);   // TODO: UGH!
+    TNodeIndex* dependencies = out_dependecies ? out_dependecies : (TNodeIndex*)alloca(sizeof(TNodeIndex) * connection_count); // TODO: UGH!
 
     TNodeIndex dependency_count = 0;
     for (TConnectionIndex connection_index = 0; connection_index < node_description->m_AudioConnectionCount; ++connection_index)
@@ -162,7 +162,7 @@ static TNodeIndex GetDependencies(
         {
             continue;
         }
-        bool is_unique = true;
+        bool       is_unique         = true;
         TNodeIndex output_node_index = (TNodeIndex)(node_index + audio_connections[node_index][connection_index].m_OutputNodeOffset);
         for (TConnectionIndex prev = 0; prev < dependency_count; ++prev)
         {
@@ -182,7 +182,7 @@ static TNodeIndex GetDependencies(
 
     for (TConnectionIndex connection_index = 0; connection_index < node_description->m_TriggerConnectionCount; ++connection_index)
     {
-        bool is_unique = true;
+        bool       is_unique         = true;
         TNodeIndex output_node_index = trigger_connections[node_index][connection_index].m_OutputNodeOffset;
         for (TConnectionIndex prev = 0; prev < connection_index; ++prev)
         {
@@ -205,43 +205,44 @@ static TNodeIndex GetDependencies(
     return dependency_count;
 }
 
-struct GraphProperties {
-    TParameterIndex m_ParameterCount;
-    TResourceIndex m_ResourceCount;
-    TAudioSocketIndex m_AudioInputCount;
-    TAudioSocketIndex m_AudioOutputCount;
-    uint32_t m_GeneratedAudioBufferCount;
-    TTriggerCount m_TriggerInputCount;
-    TTriggerCount m_TriggerOutputCount;
-    TNodeIndex m_DependencyCount;
+struct GraphProperties
+{
+    TParameterIndex    m_ParameterCount;
+    TResourceIndex     m_ResourceCount;
+    TAudioSocketIndex  m_AudioInputCount;
+    TAudioSocketIndex  m_AudioOutputCount;
+    uint32_t           m_GeneratedAudioBufferCount;
+    TTriggerCount      m_TriggerInputCount;
+    TTriggerCount      m_TriggerOutputCount;
+    TNodeIndex         m_DependencyCount;
     TContextMemorySize m_ContextMemorySize;
 };
 
 static bool GetGraphProperties(
-    const GraphDescription* graph_description,
-    const GraphRuntimeSettings* graph_runtime_settings,
-    GraphProperties* graph_properties)
+const GraphDescription*     graph_description,
+const GraphRuntimeSettings* graph_runtime_settings,
+GraphProperties*            graph_properties)
 {
-    TParameterIndex parameter_count = 0;
-    TResourceIndex resource_count = 0;
-    TTriggerCount trigger_input_count = 0;
-    TTriggerCount trigger_output_count = 0;
-    TAudioSocketIndex audio_input_count = 0;
-    TAudioSocketIndex audio_output_count = 0;
-    TNodeIndex dependency_count = 0;
-    uint32_t generated_buffer_count = 0;
-    TContextMemorySize context_memory_size = 0;
+    TParameterIndex    parameter_count        = 0;
+    TResourceIndex     resource_count         = 0;
+    TTriggerCount      trigger_input_count    = 0;
+    TTriggerCount      trigger_output_count   = 0;
+    TAudioSocketIndex  audio_input_count      = 0;
+    TAudioSocketIndex  audio_output_count     = 0;
+    TNodeIndex         dependency_count       = 0;
+    uint32_t           generated_buffer_count = 0;
+    TContextMemorySize context_memory_size    = 0;
 
-    NodeAudioConnection const** audio_connections = (NodeAudioConnection const**)alloca(sizeof(NodeAudioConnection*) * graph_description->m_NodeCount);
-    const NodeAudioConnection* node_audio_connections = graph_description->m_AudioConnections;
+    NodeAudioConnection const** audio_connections      = (NodeAudioConnection const**)alloca(sizeof(NodeAudioConnection*) * graph_description->m_NodeCount);
+    const NodeAudioConnection*  node_audio_connections = graph_description->m_AudioConnections;
 
-    NodeTriggerConnection const** trigger_connections = (NodeTriggerConnection const**)alloca(sizeof(NodeTriggerConnection*) * graph_description->m_NodeCount);
-    const NodeTriggerConnection* node_trigger_connections = graph_description->m_TriggerConnections;
+    NodeTriggerConnection const** trigger_connections      = (NodeTriggerConnection const**)alloca(sizeof(NodeTriggerConnection*) * graph_description->m_NodeCount);
+    const NodeTriggerConnection*  node_trigger_connections = graph_description->m_TriggerConnections;
 
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
     {
         const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
-        audio_connections[node_index] = node_audio_connections;
+        audio_connections[node_index]           = node_audio_connections;
         node_audio_connections += node_description.m_AudioConnectionCount;
 
         trigger_connections[node_index] = node_trigger_connections;
@@ -273,55 +274,55 @@ static bool GetGraphProperties(
         dependency_count += GetDependencies(node_index, &node_description, audio_connections, trigger_connections, 0x0);
     }
 
-    graph_properties->m_ContextMemorySize = context_memory_size;
-    graph_properties->m_ParameterCount = parameter_count;
-    graph_properties->m_ResourceCount = resource_count;
-    graph_properties->m_AudioInputCount = audio_input_count;
-    graph_properties->m_AudioOutputCount = audio_output_count;
+    graph_properties->m_ContextMemorySize         = context_memory_size;
+    graph_properties->m_ParameterCount            = parameter_count;
+    graph_properties->m_ResourceCount             = resource_count;
+    graph_properties->m_AudioInputCount           = audio_input_count;
+    graph_properties->m_AudioOutputCount          = audio_output_count;
     graph_properties->m_GeneratedAudioBufferCount = generated_buffer_count;
-    graph_properties->m_TriggerInputCount = trigger_input_count;
-    graph_properties->m_TriggerOutputCount = trigger_output_count;
-    graph_properties->m_DependencyCount = dependency_count;
+    graph_properties->m_TriggerInputCount         = trigger_input_count;
+    graph_properties->m_TriggerOutputCount        = trigger_output_count;
+    graph_properties->m_DependencyCount           = dependency_count;
     return true;
 }
 
 static TGraphSize GetGraphSize(
-    const GraphDescription* graph_description,
-    const GraphProperties* graph_properties)
+const GraphDescription* graph_description,
+const GraphProperties*  graph_properties)
 {
     TGraphSize s = ALIGN_SIZE(sizeof(Graph), sizeof(void*)) +
-        ALIGN_SIZE(sizeof(TParameter) * graph_properties->m_ParameterCount, sizeof(Resource*)) +
-        ALIGN_SIZE(sizeof(Resource) * graph_properties->m_ResourceCount, sizeof(RenderCallback)) +
-        ALIGN_SIZE(sizeof(Node) * graph_description->m_NodeCount, sizeof(float*)) +
-        ALIGN_SIZE(sizeof(AudioOutput) * (graph_properties->m_AudioOutputCount + 1), sizeof(AudioOutput*)) +
-        ALIGN_SIZE(sizeof(AudioInput) * graph_properties->m_AudioInputCount, sizeof(TTriggerSocketIndex*)) +
-        ALIGN_SIZE(sizeof(TriggerInput) * graph_properties->m_TriggerInputCount, 1) +
-        ALIGN_SIZE(sizeof(TriggerOutput) * graph_properties->m_TriggerOutputCount, sizeof(TNodeIndex)) +
-        ALIGN_SIZE(sizeof(TNodeIndex) * graph_properties->m_DependencyCount, sizeof(1));
+    ALIGN_SIZE(sizeof(TParameter) * graph_properties->m_ParameterCount, sizeof(Resource*)) +
+    ALIGN_SIZE(sizeof(Resource) * graph_properties->m_ResourceCount, sizeof(RenderCallback)) +
+    ALIGN_SIZE(sizeof(Node) * graph_description->m_NodeCount, sizeof(float*)) +
+    ALIGN_SIZE(sizeof(AudioOutput) * (graph_properties->m_AudioOutputCount + 1), sizeof(AudioOutput*)) +
+    ALIGN_SIZE(sizeof(AudioInput) * graph_properties->m_AudioInputCount, sizeof(TTriggerSocketIndex*)) +
+    ALIGN_SIZE(sizeof(TriggerInput) * graph_properties->m_TriggerInputCount, 1) +
+    ALIGN_SIZE(sizeof(TriggerOutput) * graph_properties->m_TriggerOutputCount, sizeof(TNodeIndex)) +
+    ALIGN_SIZE(sizeof(TNodeIndex) * graph_properties->m_DependencyCount, sizeof(1));
     return s;
 }
 
 bool GetGraphSize(
-    const GraphDescription* graph_description,
-    const GraphRuntimeSettings* graph_runtime_settings,
-    GraphSize* out_graph_size)
+const GraphDescription*     graph_description,
+const GraphRuntimeSettings* graph_runtime_settings,
+GraphSize*                  out_graph_size)
 {
     GraphProperties graph_properties;
     if (!GetGraphProperties(graph_description, graph_runtime_settings, &graph_properties))
     {
         return false;
     }
-    out_graph_size->m_GraphSize = GetGraphSize(graph_description, &graph_properties);
+    out_graph_size->m_GraphSize         = GetGraphSize(graph_description, &graph_properties);
     out_graph_size->m_TriggerBufferSize = graph_properties.m_TriggerInputCount * graph_runtime_settings->m_MaxTriggerEventCount * sizeof(TTriggerSocketIndex);
     out_graph_size->m_ScratchBufferSize = graph_properties.m_GeneratedAudioBufferCount * graph_runtime_settings->m_MaxBatchSize * sizeof(float);
     out_graph_size->m_ContextMemorySize = graph_properties.m_ContextMemorySize;
     return true;
 }
 
-static float* AllocateAudioBuffer(HGraph graph, HNode , TChannelIndex channel_count, TFrameIndex frame_count)
+static float* AllocateAudioBuffer(HGraph graph, HNode, TChannelIndex channel_count, TFrameIndex frame_count)
 {
     uint32_t samples_required = (uint32_t)channel_count * (uint32_t)frame_count;
-    uint32_t samples_left = graph->m_ScratchBufferSize - graph->m_ScratchUsedCount;
+    uint32_t samples_left     = graph->m_ScratchBufferSize - graph->m_ScratchUsedCount;
     if (samples_left >= samples_required)
     {
         float* scratch = &graph->m_ScratchBuffer[graph->m_ScratchUsedCount];
@@ -352,8 +353,8 @@ void RenderGraph(HGraph graph, TFrameIndex frame_count)
 {
     TNodeIndex node_count = graph->m_NodeCount;
 
-    RenderJob* render_jobs = (RenderJob*)alloca(sizeof(RenderJob) * node_count);
-    uint8_t* is_node_rendered = (uint8_t*)alloca(sizeof(uint8_t) * node_count);
+    RenderJob* render_jobs      = (RenderJob*)alloca(sizeof(RenderJob) * node_count);
+    uint8_t*   is_node_rendered = (uint8_t*)alloca(sizeof(uint8_t) * node_count);
     for (TNodeIndex node_index = 0; node_index < node_count; ++node_index)
     {
         is_node_rendered[node_index] = 0;
@@ -368,31 +369,31 @@ void RenderGraph(HGraph graph, TFrameIndex frame_count)
 void GetRenderJobs(HGraph graph, TFrameIndex frame_count, RenderJob* out_render_jobs)
 {
     graph->m_ScratchUsedCount = 0;
-    Node* nodes = graph->m_Nodes;
-    TNodeIndex node_count = graph->m_NodeCount;
+    Node*      nodes          = graph->m_Nodes;
+    TNodeIndex node_count     = graph->m_NodeCount;
 
     TNodeIndex i = 0;
     while (i < node_count)
     {
-        Node* node = &nodes[i];
-        RenderJob& render_job = out_render_jobs[i];
-        render_job.m_RenderCallback = node->m_Render;
-        render_job.m_Graph = graph;
-        render_job.m_Node = node;
-        render_job.m_DependencyCount = node->m_DependencyCount;
-        render_job.m_Dependencies = &graph->m_Dependencies[node->m_DependencyOffset];
-        RenderParameters& render_parameters = render_job.m_RenderParameters;
+        Node*      node                         = &nodes[i];
+        RenderJob& render_job                   = out_render_jobs[i];
+        render_job.m_RenderCallback             = node->m_Render;
+        render_job.m_Graph                      = graph;
+        render_job.m_Node                       = node;
+        render_job.m_DependencyCount            = node->m_DependencyCount;
+        render_job.m_Dependencies               = &graph->m_Dependencies[node->m_DependencyOffset];
+        RenderParameters& render_parameters     = render_job.m_RenderParameters;
         render_parameters.m_AllocateAudioBuffer = AllocateAudioBuffer;
-        render_parameters.m_FrameRate = graph->m_FrameRate;
-        render_parameters.m_FrameCount = frame_count;
+        render_parameters.m_FrameRate           = graph->m_FrameRate;
+        render_parameters.m_FrameCount          = frame_count;
 
-        render_parameters.m_AudioInputs = &graph->m_AudioInputs[node->m_AudioInputsOffset];
-        render_parameters.m_AudioOutputs = &graph->m_AudioOutputs[node->m_AudioOutputsOffset];
-        render_parameters.m_Parameters = &graph->m_Parameters[node->m_ParametersOffset];
-        render_parameters.m_Resources = &graph->m_Resources[node->m_ResourcesOffset];
-        render_parameters.m_TriggerInput = &graph->m_TriggerInputs[node->m_TriggerInputOffset];
+        render_parameters.m_AudioInputs    = &graph->m_AudioInputs[node->m_AudioInputsOffset];
+        render_parameters.m_AudioOutputs   = &graph->m_AudioOutputs[node->m_AudioOutputsOffset];
+        render_parameters.m_Parameters     = &graph->m_Parameters[node->m_ParametersOffset];
+        render_parameters.m_Resources      = &graph->m_Resources[node->m_ResourcesOffset];
+        render_parameters.m_TriggerInput   = &graph->m_TriggerInputs[node->m_TriggerInputOffset];
         render_parameters.m_TriggerOutputs = &graph->m_TriggerOutputs[node->m_TriggerOutputOffset];
-        render_parameters.m_ContextMemory = &graph->m_ContextMemory[node->m_ContextMemoryOffset];
+        render_parameters.m_ContextMemory  = &graph->m_ContextMemory[node->m_ContextMemoryOffset];
         ++i;
     }
 }
@@ -403,8 +404,8 @@ bool SetParameter(HGraph graph, TNodeIndex node_index, TParameterIndex parameter
     {
         return false;
     }
-    Node* node = &graph->m_Nodes[node_index];
-    TParameterOffset paramter_offset = node->m_ParametersOffset + parameter_index;
+    Node*            node                = &graph->m_Nodes[node_index];
+    TParameterOffset paramter_offset     = node->m_ParametersOffset + parameter_index;
     graph->m_Parameters[paramter_offset] = value;
     return true;
 }
@@ -415,7 +416,7 @@ bool Trigger(HGraph graph, TNodeIndex node_index, TTriggerSocketIndex trigger_in
     {
         return false;
     }
-    Node* node = &graph->m_Nodes[node_index];
+    Node*         node          = &graph->m_Nodes[node_index];
     TriggerInput* trigger_input = &graph->m_TriggerInputs[node->m_TriggerInputOffset];
     if (graph->m_MaxTriggerEventCount == trigger_input->m_Count)
     {
@@ -433,26 +434,26 @@ AudioOutput* GetAudioOutput(HGraph graph, TNodeIndex node_index, TAudioSocketInd
 }
 
 static HNode MakeNode(
-    HGraph graph,
-    const NodeDescription* node_description,
-    const NodeRuntimeDescription* node_runtime_description,
-    const NodeAudioConnection* const * audio_connections,
-    const NodeTriggerConnection*  const* trigger_connections,
-    TNodeIndex* node_offset,
-    TAudioInputOffset* input_offset,
-    TAudioOutputOffset* output_offset,
-    TParameterOffset* parameters_offset,
-    TResourceOffset* resources_offset,
-    TTriggerOffset* triggers_input_offset,
-    TTriggerOffset* triggers_output_offset,
-    TNodeIndex* dependenceny_offset,
-    TContextMemorySize* context_memory_offset)
+HGraph                              graph,
+const NodeDescription*              node_description,
+const NodeRuntimeDescription*       node_runtime_description,
+const NodeAudioConnection* const*   audio_connections,
+const NodeTriggerConnection* const* trigger_connections,
+TNodeIndex*                         node_offset,
+TAudioInputOffset*                  input_offset,
+TAudioOutputOffset*                 output_offset,
+TParameterOffset*                   parameters_offset,
+TResourceOffset*                    resources_offset,
+TTriggerOffset*                     triggers_input_offset,
+TTriggerOffset*                     triggers_output_offset,
+TNodeIndex*                         dependenceny_offset,
+TContextMemorySize*                 context_memory_offset)
 {
     TNodeIndex node_index = *node_offset;
     (*node_offset) += 1;
     Node* node = &graph->m_Nodes[node_index];
 
-    node->m_Render = node_runtime_description->m_RenderCallback;
+    node->m_Render           = node_runtime_description->m_RenderCallback;
     node->m_ParametersOffset = *parameters_offset;
     *parameters_offset += node_description->m_NodeStaticDescription.m_ParameterCount;
     node->m_AudioInputsOffset = *input_offset;
@@ -478,7 +479,7 @@ static HNode MakeNode(
     *dependenceny_offset += node->m_DependencyCount;
 
     graph->m_TriggerInputs[node_index].m_Buffer = &graph->m_Triggers[node_index * graph->m_MaxTriggerEventCount];
-    graph->m_TriggerInputs[node_index].m_Count = 0;
+    graph->m_TriggerInputs[node_index].m_Count  = 0;
 
     node->m_ContextMemoryOffset = *context_memory_offset;
     *context_memory_offset += node_runtime_description->m_ContextMemorySize;
@@ -487,17 +488,17 @@ static HNode MakeNode(
 
 bool SetResource(HGraph graph, TNodeIndex node_index, TResourceIndex resource_index, const Resource* resource)
 {
-    Node* node = &graph->m_Nodes[node_index];
-    Resource* r = &graph->m_Resources[node->m_ResourcesOffset + resource_index];
-    r->m_Data = resource->m_Data;
-    r->m_Size = resource->m_Size;
+    Node*     node = &graph->m_Nodes[node_index];
+    Resource* r    = &graph->m_Resources[node->m_ResourcesOffset + resource_index];
+    r->m_Data      = resource->m_Data;
+    r->m_Size      = resource->m_Size;
     return true;
 }
 
 HGraph CreateGraph(
-    const GraphDescription* graph_description,
-    const GraphRuntimeSettings* graph_runtime_settings,
-    const GraphBuffers* graph_buffers)
+const GraphDescription*     graph_description,
+const GraphRuntimeSettings* graph_runtime_settings,
+const GraphBuffers*         graph_buffers)
 {
     GraphProperties graph_properties;
     if (!GetGraphProperties(graph_description, graph_runtime_settings, &graph_properties))
@@ -505,19 +506,19 @@ HGraph CreateGraph(
         return 0x0;
     }
 
-    HGraph graph = (HGraph)(graph_buffers->m_GraphMem);
+    HGraph     graph      = (HGraph)(graph_buffers->m_GraphMem);
     TGraphSize graph_size = GetGraphSize(graph_description, &graph_properties);
     memset(graph, 0, graph_size);
 
-    graph->m_FrameRate = graph_runtime_settings->m_FrameRate;
+    graph->m_FrameRate            = graph_runtime_settings->m_FrameRate;
     graph->m_MaxTriggerEventCount = graph_runtime_settings->m_MaxTriggerEventCount;
-    graph->m_NodeCount = graph_description->m_NodeCount;
-    graph->m_ScratchBufferSize = graph_properties.m_GeneratedAudioBufferCount * graph_runtime_settings->m_MaxBatchSize;
-    graph->m_Triggers = (TTriggerSocketIndex*)graph_buffers->m_TriggerBufferMem;
-    graph->m_ScratchBuffer = (float*)graph_buffers->m_ScratchBufferMem;
-    graph->m_ContextMemory = (uint8_t*)graph_buffers->m_ContextMem;
+    graph->m_NodeCount            = graph_description->m_NodeCount;
+    graph->m_ScratchBufferSize    = graph_properties.m_GeneratedAudioBufferCount * graph_runtime_settings->m_MaxBatchSize;
+    graph->m_Triggers             = (TTriggerSocketIndex*)graph_buffers->m_TriggerBufferMem;
+    graph->m_ScratchBuffer        = (float*)graph_buffers->m_ScratchBufferMem;
+    graph->m_ContextMemory        = (uint8_t*)graph_buffers->m_ContextMem;
 
-    uint8_t* ptr = (uint8_t*)graph_buffers->m_GraphMem;
+    uint8_t* ptr    = (uint8_t*)graph_buffers->m_GraphMem;
     uint32_t offset = ALIGN_SIZE(sizeof(Graph), sizeof(void*));
 
     graph->m_Parameters = (TParameter*)&ptr[offset];
@@ -528,7 +529,7 @@ HGraph CreateGraph(
 
     graph->m_Nodes = (Node*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(Node) * graph_description->m_NodeCount, sizeof(AudioOutput*));
-    
+
     graph->m_AudioInputs = (AudioInput*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(AudioInput) * graph_properties.m_AudioInputCount, sizeof(float*));
 
@@ -544,26 +545,26 @@ HGraph CreateGraph(
     graph->m_Dependencies = (TNodeIndex*)&ptr[offset];
     offset += ALIGN_SIZE(sizeof(TNodeIndex) * (graph_properties.m_DependencyCount), sizeof(1));
 
-    TNodeIndex node_offset = 0;
-    TAudioInputOffset input_offset = 0;
-    TAudioOutputOffset output_offset = 1; // Zero is reserved for unconnected inputs
-    TParameterOffset parameters_offset = 0;
-    TResourceOffset resources_offset = 0;
-    TTriggerOffset triggers_input_offset = 0;
-    TTriggerOffset triggers_output_offset = 0;
-    TNodeIndex dependenceny_offset = 0;
-    TContextMemorySize context_memory_offset = 0;
+    TNodeIndex         node_offset            = 0;
+    TAudioInputOffset  input_offset           = 0;
+    TAudioOutputOffset output_offset          = 1; // Zero is reserved for unconnected inputs
+    TParameterOffset   parameters_offset      = 0;
+    TResourceOffset    resources_offset       = 0;
+    TTriggerOffset     triggers_input_offset  = 0;
+    TTriggerOffset     triggers_output_offset = 0;
+    TNodeIndex         dependenceny_offset    = 0;
+    TContextMemorySize context_memory_offset  = 0;
 
-    NodeAudioConnection const** audio_connections = (NodeAudioConnection const**)alloca(sizeof(NodeAudioConnection*) * graph_description->m_NodeCount);
-    const NodeAudioConnection* node_audio_connections = graph_description->m_AudioConnections;
+    NodeAudioConnection const** audio_connections      = (NodeAudioConnection const**)alloca(sizeof(NodeAudioConnection*) * graph_description->m_NodeCount);
+    const NodeAudioConnection*  node_audio_connections = graph_description->m_AudioConnections;
 
-    NodeTriggerConnection const** trigger_connections = (NodeTriggerConnection const**)alloca(sizeof(NodeTriggerConnection*) * graph_description->m_NodeCount);
-    const NodeTriggerConnection* node_trigger_connections = graph_description->m_TriggerConnections;
+    NodeTriggerConnection const** trigger_connections      = (NodeTriggerConnection const**)alloca(sizeof(NodeTriggerConnection*) * graph_description->m_NodeCount);
+    const NodeTriggerConnection*  node_trigger_connections = graph_description->m_TriggerConnections;
 
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
     {
         const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
-        audio_connections[node_index] = node_audio_connections;
+        audio_connections[node_index]           = node_audio_connections;
         node_audio_connections += node_description.m_AudioConnectionCount;
 
         trigger_connections[node_index] = node_trigger_connections;
@@ -577,20 +578,20 @@ HGraph CreateGraph(
         NodeRuntimeDescription node_runtime_description;
         node_description.m_NodeStaticDescription.m_GetNodeRuntimeDescCallback(graph_runtime_settings, &node_runtime_description);
         MakeNode(
-            graph,
-            &node_description,
-            &node_runtime_description,
-            audio_connections,
-            trigger_connections,
-            &node_offset,
-            &input_offset,
-            &output_offset,
-            &parameters_offset,
-            &resources_offset,
-            &triggers_input_offset,
-            &triggers_output_offset,
-            &dependenceny_offset,
-            &context_memory_offset);
+        graph,
+        &node_description,
+        &node_runtime_description,
+        audio_connections,
+        trigger_connections,
+        &node_offset,
+        &input_offset,
+        &output_offset,
+        &parameters_offset,
+        &resources_offset,
+        &triggers_input_offset,
+        &triggers_output_offset,
+        &dependenceny_offset,
+        &context_memory_offset);
     }
 
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
@@ -598,10 +599,10 @@ HGraph CreateGraph(
         const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
         for (TConnectionIndex i = 0; i < node_description.m_AudioConnectionCount; ++i)
         {
-            const NodeAudioConnection* node_connection = &audio_connections[node_index][i];
-            Node* input_node = &graph->m_Nodes[node_index];
-            TAudioInputOffset graph_input_index = input_node->m_AudioInputsOffset + node_connection->m_InputIndex;
-            if(graph->m_AudioInputs[graph_input_index].m_AudioOutput != 0x0)
+            const NodeAudioConnection* node_connection   = &audio_connections[node_index][i];
+            Node*                      input_node        = &graph->m_Nodes[node_index];
+            TAudioInputOffset          graph_input_index = input_node->m_AudioInputsOffset + node_connection->m_InputIndex;
+            if (graph->m_AudioInputs[graph_input_index].m_AudioOutput != 0x0)
             {
                 return 0x0;
             }
@@ -611,26 +612,26 @@ HGraph CreateGraph(
             }
             else
             {
-                TNodeIndex output_node_index = (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset);
-                Node* output_node = &graph->m_Nodes[output_node_index];
+                TNodeIndex output_node_index                          = (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset);
+                Node*      output_node                                = &graph->m_Nodes[output_node_index];
                 graph->m_AudioInputs[graph_input_index].m_AudioOutput = &graph->m_AudioOutputs[output_node->m_AudioOutputsOffset + node_connection->m_OutputIndex];
             }
         }
 
         for (TConnectionIndex i = 0; i < node_description.m_TriggerConnectionCount; ++i)
         {
-            const NodeTriggerConnection* node_connection = &trigger_connections[node_index][i];
-            TNodeIndex output_node_index = (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset);
-            Node* output_node = &graph->m_Nodes[output_node_index];
-            TTriggerOffset graph_output_index = output_node->m_TriggerOutputOffset + node_connection->m_OutputIndex;
+            const NodeTriggerConnection* node_connection            = &trigger_connections[node_index][i];
+            TNodeIndex                   output_node_index          = (TNodeIndex)(node_index + node_connection->m_OutputNodeOffset);
+            Node*                        output_node                = &graph->m_Nodes[output_node_index];
+            TTriggerOffset               graph_output_index         = output_node->m_TriggerOutputOffset + node_connection->m_OutputIndex;
             graph->m_TriggerOutputs[graph_output_index].m_InputNode = node_index;
-            graph->m_TriggerOutputs[graph_output_index].m_Trigger = node_connection->m_InputTriggerIndex;
+            graph->m_TriggerOutputs[graph_output_index].m_Trigger   = node_connection->m_InputTriggerIndex;
         }
     }
 
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
     {
-        Node* node = &graph->m_Nodes[node_index];
+        Node*        node           = &graph->m_Nodes[node_index];
         AudioOutput* render_outputs = &graph->m_AudioOutputs[node->m_AudioOutputsOffset];
 
         const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
@@ -645,7 +646,7 @@ HGraph CreateGraph(
 
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
     {
-        Node* node = &graph->m_Nodes[node_index];
+        Node*                  node             = &graph->m_Nodes[node_index];
         const NodeDescription& node_description = graph_description->m_NodeDescriptions[node_index];
         NodeRuntimeDescription node_runtime_description;
         node_description.m_NodeStaticDescription.m_GetNodeRuntimeDescCallback(graph_runtime_settings, &node_runtime_description);
@@ -658,4 +659,4 @@ HGraph CreateGraph(
     return graph;
 }
 
-}
+} // namespace sogo

@@ -5,73 +5,73 @@
 
 #include <new>
 
-#define ALIGN_SIZE(x, align)    (((x) + ((align) - 1)) & ~((align) - 1))
+#define ALIGN_SIZE(x, align) (((x) + ((align)-1)) & ~((align)-1))
 
 namespace sogo {
 
 struct ParameterTarget
 {
-    TNodeIndex m_NodeIndex;
+    TNodeIndex      m_NodeIndex;
     TParameterIndex m_ParameterIndex;
 };
 
 struct TriggerTarget
 {
-    TNodeIndex m_NodeIndex;
+    TNodeIndex          m_NodeIndex;
     TTriggerSocketIndex m_TriggerIndex;
 };
 
 typedef jc::HashTable<TParameterNameHash, ParameterTarget> TParameterLookup;
-typedef jc::HashTable<TTriggerNameHash, TriggerTarget> TTriggerLookup;
+typedef jc::HashTable<TTriggerNameHash, TriggerTarget>     TTriggerLookup;
 
 static uint32_t GetParameterLookupSize(uint32_t num_elements)
 {
-    const uint32_t load_factor    = 100; // percent
-    const uint32_t tablesize      = uint32_t(num_elements / (load_factor/100.0f));
+    const uint32_t load_factor = 100; // percent
+    const uint32_t tablesize   = uint32_t(num_elements / (load_factor / 100.0f));
     return TParameterLookup::CalcSize(tablesize);
 }
 
 static uint32_t GetTriggerLookupSize(uint32_t num_elements)
 {
-    const uint32_t load_factor    = 100; // percent
-    const uint32_t tablesize      = uint32_t(num_elements / (load_factor/100.0f));
+    const uint32_t load_factor = 100; // percent
+    const uint32_t tablesize   = uint32_t(num_elements / (load_factor / 100.0f));
     return TTriggerLookup::CalcSize(tablesize);
 }
 
-struct Access {
+struct Access
+{
     Access(
-        TParameterIndex named_parameter_count,
-        TTriggerSocketIndex named_trigger_count,
-        void* parameter_lookup_data,
-        void* trigger_lookup_data);
+    TParameterIndex     named_parameter_count,
+    TTriggerSocketIndex named_trigger_count,
+    void*               parameter_lookup_data,
+    void*               trigger_lookup_data);
 
     TParameterLookup m_ParameterLookup;
-    TTriggerLookup m_TriggerLookup;
+    TTriggerLookup   m_TriggerLookup;
 };
 
 Access::Access(
-        TParameterIndex named_parameter_count,
-        TTriggerSocketIndex named_trigger_count,
-        void* parameter_lookup_data,
-        void* trigger_lookup_data)
+TParameterIndex     named_parameter_count,
+TTriggerSocketIndex named_trigger_count,
+void*               parameter_lookup_data,
+void*               trigger_lookup_data)
     : m_ParameterLookup(named_parameter_count, parameter_lookup_data)
     , m_TriggerLookup(named_trigger_count, trigger_lookup_data)
 {
-    
-}    
-       
+}
+
 struct AccessProperties
 {
-    TParameterIndex m_NamedParameterCount;
+    TParameterIndex     m_NamedParameterCount;
     TTriggerSocketIndex m_NamedTriggerCount;
 };
 
 static bool GetAccessProperties(
-    const AccessDescription* access_description,
-    AccessProperties* out_access_properties)
+const AccessDescription* access_description,
+AccessProperties*        out_access_properties)
 {
-    TParameterIndex named_parameter_count = 0;
-    TTriggerSocketIndex named_trigger_count = 0;
+    TParameterIndex     named_parameter_count = 0;
+    TTriggerSocketIndex named_trigger_count   = 0;
 
     const GraphDescription* graph_description = access_description->m_GraphDescription;
     for (TNodeIndex i = 0; i < graph_description->m_NodeCount; ++i)
@@ -96,23 +96,23 @@ static bool GetAccessProperties(
         }
     }
     out_access_properties->m_NamedParameterCount = named_parameter_count;
-    out_access_properties->m_NamedTriggerCount = named_trigger_count;
+    out_access_properties->m_NamedTriggerCount   = named_trigger_count;
     return true;
 }
 
 static TAccessSize GetAccessSize(
-    const AccessDescription* ,
-    const AccessProperties* access_properties)
+const AccessDescription*,
+const AccessProperties* access_properties)
 {
     TAccessSize s = (TAccessSize)(ALIGN_SIZE(sizeof(Access), sizeof(void*)) +
-                ALIGN_SIZE(GetParameterLookupSize(access_properties->m_NamedParameterCount), sizeof(void*)) +
-                ALIGN_SIZE(GetTriggerLookupSize(access_properties->m_NamedTriggerCount), sizeof(float)));
+                                  ALIGN_SIZE(GetParameterLookupSize(access_properties->m_NamedParameterCount), sizeof(void*)) +
+                                  ALIGN_SIZE(GetTriggerLookupSize(access_properties->m_NamedTriggerCount), sizeof(float)));
     return s;
 }
 
 bool GetAccessSize(
-    const AccessDescription* access_description,
-    TAccessSize& out_access_size)
+const AccessDescription* access_description,
+TAccessSize&             out_access_size)
 {
     AccessProperties access_properties;
     if (!GetAccessProperties(access_description, &access_properties))
@@ -143,9 +143,9 @@ TTriggerNameHash MakeTriggerHash(TNodeNameHash node_name_hash, const char* trigg
 
 static bool RegisterNamedParameter(HAccess access, TNodeIndex node_index, TParameterIndex parameter_index, TNodeNameHash node_name_hash, const char* parameter_name)
 {
-    uint32_t node_key = MakeParameterHash(node_name_hash, parameter_name);
+    uint32_t        node_key = MakeParameterHash(node_name_hash, parameter_name);
     ParameterTarget target;
-    target.m_NodeIndex = node_index;
+    target.m_NodeIndex      = node_index;
     target.m_ParameterIndex = parameter_index;
     access->m_ParameterLookup.Put(node_key, target);
     return true;
@@ -153,17 +153,17 @@ static bool RegisterNamedParameter(HAccess access, TNodeIndex node_index, TParam
 
 static bool RegisterNamedTrigger(HAccess access, TNodeIndex node_index, TTriggerSocketIndex trigger_index, TNodeNameHash node_name_hash, const char* trigger_name)
 {
-    uint32_t node_key = MakeTriggerHash(node_name_hash, trigger_name);
+    uint32_t      node_key = MakeTriggerHash(node_name_hash, trigger_name);
     TriggerTarget target;
-    target.m_NodeIndex = node_index;
+    target.m_NodeIndex    = node_index;
     target.m_TriggerIndex = trigger_index;
     access->m_TriggerLookup.Put(node_key, target);
     return true;
 }
 
 HAccess CreateAccess(
-    void* access_mem,
-    const AccessDescription* access_description)
+void*                    access_mem,
+const AccessDescription* access_description)
 {
     AccessProperties access_properties;
     if (!GetAccessProperties(access_description, &access_properties))
@@ -171,8 +171,8 @@ HAccess CreateAccess(
         return 0x0;
     }
 
-    uint8_t* ptr = (uint8_t*)access_mem;
-    size_t offset = ALIGN_SIZE(sizeof(Access), sizeof(void*));
+    uint8_t* ptr    = (uint8_t*)access_mem;
+    size_t   offset = ALIGN_SIZE(sizeof(Access), sizeof(void*));
 
     void* parameter_lookup_data = &ptr[offset];
     offset += ALIGN_SIZE(GetParameterLookupSize(access_properties.m_NamedParameterCount), sizeof(void*));
@@ -181,10 +181,10 @@ HAccess CreateAccess(
     offset += ALIGN_SIZE(GetTriggerLookupSize(access_properties.m_NamedTriggerCount), sizeof(float));
 
     HAccess access = new (access_mem) Access(
-        access_properties.m_NamedParameterCount,
-        access_properties.m_NamedTriggerCount,
-        parameter_lookup_data,
-        trigger_lookup_data);
+    access_properties.m_NamedParameterCount,
+    access_properties.m_NamedTriggerCount,
+    parameter_lookup_data,
+    trigger_lookup_data);
 
     const GraphDescription* graph_description = access_description->m_GraphDescription;
     for (TNodeIndex node_index = 0; node_index < graph_description->m_NodeCount; ++node_index)
@@ -242,4 +242,4 @@ bool Trigger(HAccess access, HGraph graph, TTriggerNameHash trigger_hash)
     return Trigger(graph, target->m_NodeIndex, target->m_TriggerIndex);
 }
 
-}
+} // namespace sogo
